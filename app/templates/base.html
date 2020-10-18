@@ -1,0 +1,14 @@
+<html>
+    <head>
+        {% if title %}
+        <title>{{ title }} - Yuh</title>
+        {% else %}
+        <title>Welcome to YUH</title>
+        {% endif %}
+    </head>
+    <body>
+        <div>MicroYUH: <a href="/index">Home</a></div>
+        <hr>
+        {% block content %}{% endblock %}
+    </body>
+</html>
