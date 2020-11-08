@@ -75,11 +75,11 @@ NAME_FILE_PATH = "data/raw/names"
 SEQUENCE_DB_PATH = "data/sequences.txt"
 NUMBER_DB_PATH = "data/numbers.txt"
 
-MAX_NEIGHBOR_OFFSET = 6
-MAX_NEIGHBORS_PER_OFFSET = 12
+MAX_NEIGHBOR_OFFSET = 1
+MAX_NEIGHBORS_PER_OFFSET = 2
 
 NUM_STEPS = 3
-TEST_LIMIT = int(2e9)  # testing purposes: stop at this to speed up
+TEST_LIMIT = int(2e4)  # testing purposes: stop at this to speed up
 
 # Ask to make sure so the user wouldn't accidentally override existing data.
 
