@@ -20,7 +20,7 @@ sequence_data = {}
 number_data = {}
 
 
-def init(sequence_cap=int(2e4), number_cap=int(2e3)):
+def init(sequence_cap=int(2e9), number_cap=int(2e4)):
     """
     Initializes the database by reading in the database files and
     constructing dictionaries for fast lookups.
@@ -48,19 +48,28 @@ def init(sequence_cap=int(2e4), number_cap=int(2e3)):
             index_counts = {
                 index: count
                 for index, count in map(
-                lambda token: map(int, token.split(" ")), index_counts.split(
-                ","))
+                    lambda token: map(int, token.split(" ")),
+                    index_counts.split(",")
+                )
             }
-            neighbors = {(offset if offset < 0 else offset + 1): ({
-                neighbor: count
-                for neighbor, count in map(
-                lambda token: map(int, token.split(" ")),
-                neighbors_w_offset.split(",")[:MAX_NEIGHBORS_PER_OFFSET])
-            } if neighbors_w_offset and offset <= MAX_NEIGHBOR_OFFSET else {})
-                for offset, neighbors_w_offset in enumerate(
-                neighbors.split(";"), -MAX_NEIGHBOR_OFFSET)}
+            neighbors = {
+                (offset if offset < 0 else offset + 1): (
+                    {
+                        neighbor: count
+                        for neighbor, count in map(
+                            lambda token: map(int, token.split(" ")),
+                            neighbors_w_offset.split(",")
+                            [:MAX_NEIGHBORS_PER_OFFSET]
+                        )
+                    } if neighbors_w_offset and offset <= MAX_NEIGHBOR_OFFSET
+                    else {}
+                )
+                for offset, neighbors_w_offset in
+                enumerate(neighbors.split(";"), -MAX_NEIGHBOR_OFFSET)
+            }
             
             number_data[int(num)] = {
+                "num": int(num),
                 "total_count": int(total_count),
                 "total_num_sequences": int(total_num_sequences),
                 "index_counts": index_counts,

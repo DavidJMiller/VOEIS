@@ -14,38 +14,38 @@ class View {
         this.plotFuncs.set(this.textPlot, Functions.defaultMain);
     }
 
-    /* list of jsons for presets */
-    sequencePresets = [];
-    numberPresets = [];
-
-    /* change views
-        newView: string
+    /**
+     * Changes the view. This method is called when the user clicks on one of the
+     * tabs in the view-navigator.
+     * @param {string} newView The name of the view to change to, which might take
+     *     the value of either `"local"`, `"global"`, or `"fixed"`.
      */
-    changeView(newView) {}
+    changeView(newView) {
+        console.log('The view is changing to', newView);
+    }
 
-    /* user searched for a sequence or selected one from history
-        sequence: json
+    /**
+     * Views an OEIS sequence. This method is called when the user clicks on a
+     * search result/history item under the local- or global-view, or when a
+     * sequence-preset is loaded.
+     * @param {object} sequence A JSON object with the sequence's data.
+     * @param {boolean} isSelected `true` if the user just selected the sequence,
+     *     or `false` if they just deselected it.
      */
-    plotSequence(sequence) {}
+    viewSequence(sequence, isSelected) {
+        console.log(`The view is ${isSelected ? '' : 'un'}plotting`, sequence['name']);
+    }
 
-    /* number is search or selected from history
-        number: json
-    */
-    plotNumber(number) {}
-
-    /* load a preset
-        index: int corresponding to preset
-    */
-    loadSequencePreset(index) {}
-
-    /* load a preset
-        index: int corresponding to preset
-    */
-    loadNumberPreset(index) {}
-
-    /* call dbHandler to get the preset sequences/numbers */
-    loadPresets() {
-        /* populate preset lists */
+    /**
+     * Views a number that has appeared in any OEIS sequence. This method is
+     * called when the user clicks on a search result/history item under the
+     * fixed-view.
+     * @param {object} number A JSON object with the number's data.
+     * @param {boolean} isSelected `true` if the user just selected the number,
+     *     or `false` if they just deselected it.
+     */
+    viewNumber(number, isSelected) {
+        console.log(`The view is ${isSelected ? '' : 'un'}plotting`, number['name']);
     }
 }
 

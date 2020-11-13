@@ -46,59 +46,39 @@
           </g>
           <g class="input-group" style="margin-top: 18px;">
             <input id="search-bar-search-box" class="form-control"
-              placeholder="Search OEIS" />
+              placeholder="Search Sequences" />
+            <span id="search-bar-clear-button"><i class="fas fa-times"></i>
+            </span>
             <div class="input-group-append">
               <button id="search-bar-search-button"
                 class="btn btn-outline-secondary">
-                <i class="fas fa-search"></i>
+                &nbsp;<i class="fas fa-search">&nbsp;</i>
               </button>
             </div>
-          </g>
-          <g id="search-bar-result-list">
-            <div class="row btn w-100 btn-outline-dark search-bar-result-item">
-              <b>The prime numbers</b><span>A000040</span>
-              <p>
-                2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, ...
-              </p>
-            </div>
-            <div class="row btn w-100 btn-outline-dark search-bar-result-item">
-              <b>The prime numbers</b><span>A000040</span>
-              <p>
-                2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, ...
-              </p>
-            </div>
-            <div class="row btn w-100 btn-outline-dark search-bar-result-item">
-              <b>The prime numbers</b><span>A000040</span>
-              <p>
-                2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, ...
-              </p>
-            </div>
-            <div class="row btn w-100 btn-outline-dark search-bar-result-item">
-              <b>The prime numbers</b><span>A000040</span>
-              <p>
-                2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, ...
-              </p>
-            </div>
-            <div class="row btn w-100 btn-outline-dark search-bar-result-item">
-              <b>The prime numbers</b><span>A000040</span>
-              <p>
-                2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, ...
-              </p>
-            </div>
-            <div class="row btn w-100 btn-outline-dark search-bar-result-item">
-              <b>The prime numbers</b><span>A000040</span>
-              <p>
-                2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, ...
-              </p>
+            <div class="invalid-tooltip">
+              Enter your favorite <i>integer</i>!
             </div>
           </g>
+          <g>
+            <div id="search-bar-loading-indication">
+              <i class="fas fa-circle-notch fa-spin"></i>
+            </div>
+            <div id="search-bar-no-result-indication">
+              <b>Hard to find a match :(</b><br>
+              Try being more specific?
+            </div>
+          </g>
+          <g id="search-bar-result-list" class="d-flex flex-column-reverse"></g>
         </div>
         <div id="preset-list" class="col-3 fixed-bottom">
           <div id="preset-list-title">Example Visualizations:</div>
           <g id="preset-list-contents" class="btn-group d-flex">
-            <button class="btn w-100 btn-outline-secondary">Preset 1</button>
-            <button class="btn w-100 btn-outline-secondary">Preset 2</button>
-            <button class="btn w-100 btn-outline-secondary">Preset 3</button>
+            <button id="preset-list-preset-1-button"
+              class="btn w-100 btn-outline-secondary">Preset 1</button>
+            <button id="preset-list-preset-2-button"
+              class="btn w-100 btn-outline-secondary">Preset 2</button>
+            <button id="preset-list-preset-3-button"
+              class="btn w-100 btn-outline-secondary">Preset 3</button>
           </g>
         </div>
       </div>
@@ -157,10 +137,11 @@
     </div>
   </div>
   </div>
+  <script src="static/js/util.js"></script>
   <script src="static/js/dbHandler.js"></script>
   <script src="static/js/plot.js"></script>
   <script src="static/js/view.js"></script>
-  <script src="static/js/search.js"></script>
+  <script src="static/js/searchBar.js"></script>
   <script src="static/js/script.js"></script>
 </body>
 

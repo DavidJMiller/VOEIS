@@ -11,7 +11,9 @@ from app import app
 
 from data import voeis_db
 
+print("Loading database...")
 voeis_db.init()
+print("The database has been successfully loaded!")
 
 
 @app.route("/")

@@ -1,0 +1,4 @@
+.vscode/**
+**/__pycache__/**
+data/sequences.txt
+data/numbers.txt
