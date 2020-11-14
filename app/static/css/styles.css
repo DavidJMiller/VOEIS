@@ -88,6 +88,20 @@ p {
   width: calc(100%);
 }
 
+*::-webkit-scrollbar {
+  width: 6px;
+  background-color: transparent;
+}
+
+*::-webkit-scrollbar-track {
+  opacity: 0;
+}
+
+*::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb:hover {
+  background-color: transparent;
+}
+
 .container-fluid {
   padding: 0px;
   margin: 0px;
@@ -219,14 +233,6 @@ g[class^='col'] {
 
 #search-bar-result-list:hover {
   color: var(--gray-a-42);
-}
-
-#search-bar-result-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-#search-bar-result-list::-webkit-scrollbar-track {
-  opacity: 0;
 }
 
 #search-bar-result-list::-webkit-scrollbar-thumb {

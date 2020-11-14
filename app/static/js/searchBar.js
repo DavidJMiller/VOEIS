@@ -213,7 +213,7 @@ class SearchBar {
     }
   }
 
-  /** @private Register events for button and other elements. */
+  /** @private Register events for buttons and other elements. */
   initEvents() {
     for (let view of SearchBar.VIEWS) {
       this.viewNavigator.select(`#search-bar-view-navigator-${view}-button`)
@@ -235,12 +235,19 @@ class SearchBar {
                   break;
               }
             })
-        .on('input', () => {
-          this.searchBox.classed('is-invalid', false);
-          this.clearButton.style(
-              'display',
-              () => this.searchBox.node().value ? 'initial' : 'none');
-        });
+        .on('input',
+            () => {
+              this.searchBox.classed('is-invalid', false);
+              this.clearButton.style(
+                  'display',
+                  () => this.searchBox.node().value ? 'initial' : 'none');
+
+              if (!this.searchBox.node().value && this.resShowing) {
+                this.resShowing = null;
+                this.showHistory();
+              }
+            })
+        .on('blur', () => this.searchBox.classed('is-invalid', false));
 
     for (let i = 0; i < SearchBar.PRESET_SEQUENCE_A_NUMS.length; i++) {
       this.presetList.select(`#preset-list-preset-${i + 1}-button`)
