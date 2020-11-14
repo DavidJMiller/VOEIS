@@ -4,7 +4,7 @@
  *
  * VOEIS
  * David Miller, Kevin Song, and Qianlang Chen
- * H 11/12/20
+ * F 11/13/20
  */
 class SearchBar {
   //#region STATIC MEMBERS /////////////////////////////////////////////////////
@@ -81,6 +81,12 @@ class SearchBar {
      * @private @type {Selection} A D3-selection containing the search button.
      */
     this.searchButton = this.elem.select('#search-bar-search-button');
+
+    /**
+     * @private @type {Selection} A D3-selection containing the search box's
+     *     invalid-tooltip.
+     */
+    this.invalidTooltip = this.elem.select('#search-bar-invalid-tooltip');
 
     /**
      * @private @type {Selection} A D3-selection containing the spinning
@@ -178,6 +184,7 @@ class SearchBar {
               new Map([...this.defaultNumberHistory.entries()].sort(
                   (x, y) => y[0] - x[0]));
           this.clearHistory();
+          this.resList.node().scrollTop = -this.resList.node().scrollHeight;
         };
 
     // no data races here because node uses an event loop
@@ -228,10 +235,12 @@ class SearchBar {
                   break;
               }
             })
-        .on('input',
-            () => this.clearButton.style(
-                'display',
-                () => this.searchBox.node().value ? 'initial' : 'none'));
+        .on('input', () => {
+          this.searchBox.classed('is-invalid', false);
+          this.clearButton.style(
+              'display',
+              () => this.searchBox.node().value ? 'initial' : 'none');
+        });
 
     for (let i = 0; i < SearchBar.PRESET_SEQUENCE_A_NUMS.length; i++) {
       this.presetList.select(`#preset-list-preset-${i + 1}-button`)
@@ -275,6 +284,7 @@ class SearchBar {
         'display', results.length ? 'none' : 'list-item');
 
     for (let item of results.values()) this.addToResultList(item);
+    this.resList.node().scrollTop = -this.resList.node().scrollHeight;
   }
 
   /** @private Adds an item to the result list. */
@@ -332,17 +342,36 @@ class SearchBar {
   /** @private Searches a number or a sequence entered in the search box. */
   triggerSearch() {
     let query = this.searchBox.node().value.trim();
-    if (!query) return;
+    if (!query) {
+      this.invalidTooltip.html(
+          this.currView == 'fixed' ? 'Enter your favorite integer :)' :
+                                     'Enter some of your favorite integers :)');
+      this.searchBox.classed('is-invalid', true);
+      this.searchBox.node().focus();
+
+      return;
+    }
 
     if (this.currView == 'fixed') {
-      if (isNaN(query)) {
+      if (!Number.isInteger(+query)) {
+        this.invalidTooltip.html('Enter your favorite <b>integer</b>!');
         this.searchBox.classed('is-invalid', true);
+
         return;
       }
+      query = (+query).toFixed(0);
 
       DBHandler.getNumber(query, res => {
         if (this.currView != 'fixed') return;  // res comes in too late
-        let number = +query, resItem;
+        let number = +query;
+        if (!Object.keys(res).length) {
+          this.invalidTooltip.html(
+              `${number} has not appeared in any OEIS sequence :(`);
+          this.searchBox.classed('is-invalid', true);
+
+          return;
+        }
+        let resItem;
         if (this.numberHistory.has(number)) {
           resItem = this.numberHistory.get(number);
           this.numberHistory.delete(number);

@@ -45,7 +45,7 @@ class View {
      *     or `false` if they just deselected it.
      */
     viewNumber(number, isSelected) {
-        console.log(`The view is ${isSelected ? '' : 'un'}plotting`, number['name']);
+        console.log(`The view is ${isSelected ? '' : 'un'}plotting`, number['num']);
     }
 }
 

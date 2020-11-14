@@ -131,6 +131,9 @@ g[class^='col'] {
   filter: drop-shadow(0px 0px 4px black);
   user-select: none;
   margin: -12px 8px;
+  overflow: hidden;
+  word-wrap: break-word;
+  max-height: 2em;
 }
 
 #search-bar-title b {
@@ -143,7 +146,10 @@ g[class^='col'] {
   font-size: x-small;
   font-style: italic;
   opacity: 0.5;
-  margin: -12px 6px 12px;
+  margin: -12px 0px 12px;
+  max-height: 3em;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 #search-bar-view-navigator {
@@ -191,6 +197,9 @@ g[class^='col'] {
   font-size: 72px;
   text-align: center;
   opacity: 0.25;
+  user-select: none;
+  pointer-events: none;
+  cursor: default;
 }
 
 #search-bar-no-result-indication {
@@ -273,7 +282,7 @@ g[class^='col'] {
 #preset-list {
   background-color: white;
   margin-bottom: 0px;
-  height: fit-content;
+  height: initial;
 }
 
 #preset-list-title {
@@ -289,10 +298,5 @@ g[class^='col'] {
 /****** MAIN VIEW *************************************************************/
 
 /****** RIGHT VIEW ************************************************************/
-
-#view-info {
-  vertical-align: text-top;
-  display: inline-block;
-}
 
 /****** BOTTOM VIEW ***********************************************************/

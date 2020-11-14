@@ -101,7 +101,7 @@ import pycurl
 from io import BytesIO
 
 
-def search(query, cap=6):
+def search(query, cap=12):
     """
     Performs a search to the online OEIS database and returns the top results.
     """

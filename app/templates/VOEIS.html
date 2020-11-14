@@ -1,8 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<title>VOEIS</title>
+
 <head>
   <meta charset="UTF-8" />
+  <link rel="shortcut icon" href="static/favicon.ico" type="image/ico" />
+  <link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon" />
+  <link rel="icon" href="static/favicon.ico" type="image/ico" />
+  <link rel="icon" href="static/favicon.ico" type="image/x-icon" />
   <script
     src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://d3js.org/d3.v6.js"></script>
@@ -55,9 +61,7 @@
                 &nbsp;<i class="fas fa-search">&nbsp;</i>
               </button>
             </div>
-            <div class="invalid-tooltip">
-              Enter your favorite <i>integer</i>!
-            </div>
+            <div id="search-bar-invalid-tooltip" class="invalid-tooltip"></div>
           </g>
           <g>
             <div id="search-bar-loading-indication">
