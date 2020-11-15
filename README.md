@@ -42,4 +42,4 @@ The applicaiton will be available on http://0.0.0.0:5000 or [localhost:5000](loc
 
 ## Requirements
 
-The applicaiton requires [Flask](https://flask.palletsprojects.com/en/1.1.x/) and [PycURL](pycurl.io/docs/latest/index.html).
+The applicaiton requires [Flask](https://flask.palletsprojects.com/en/1.1.x/) and [PycURL](pycurl.io/docs/latest/index.html). The application also requires a working internet connection.
