@@ -39,11 +39,29 @@ class Plot {
   }
 
   /* get appropriate function and send it data to plot */
-  drawPlot(data) {
+  drawPlot(data, index) {
     this.currData = data;
     this.visType.get(this.plotType).plotData(data, this.plot);
     this.visType.get(this.plotType).plotAxes(data, this.plot);
+
+    /* TODO:
+      When index passed already exists, we are deplotting. Data is arbitrary.  
+    */
   }
+
+  /* remove drawn elements, but not axis */
+  clearPlot() {
+    this.plot.selectAll('data-elem').remove();
+  }
+  
+  /* set plottable stats for this plot */
+  setMenuItems(index, menuItems) {
+    /* TODO:
+      We are plotting the statistic menuItems[index]. Alos let
+      dropdown have items in menuItems.
+    */
+  }
+
 }
 
 class Visualizations {

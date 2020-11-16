@@ -1,19 +1,62 @@
 class View {
+
   constructor() {
+    this.currView = 'global';
+
     this.mainPlot = new Plot('main-plot-svg', 'scatter');
     this.bottomPlot = new Plot('bottom-plot-svg', 'scatter');
     this.secondaryPlot = new Plot('secondary-plot-svg', 'scatter');
     this.ternaryPlot = new Plot('ternary-plot-svg', 'scatter');
     this.textPlot = new Plot('text-plot-svg', 'scatter');
 
-    /** @type {Map<Plot, function>} */
+    /* plot iterable */
+    this.plots = [
+      this.mainPlot, 
+      this.secondaryPlot,
+      this.ternaryPlot,
+      this.bottomPlot,
+      this.textPlot
+    ];
+
+    /* set which stats are allowed within each view and plot */ 
+    this.plotStats = new Map();
+    this.plotStats.set(this.mainPlot,
+      {'local': ['Sequence Terms', 'Growth Rate'],
+        'global': ['Sloane\'s'],
+        'fixed': ['Neighbors', 'Something']
+      });
+    this.plotStats.set(this.secondaryPlot, this.plotStats.get(this.mainPlot));
+    this.plotStats.set(this.ternaryPlot, this.plotStats.get(this.mainPlot));
+    this.plotStats.set(this.bottomPlot,
+      {'local': ['GH Squares'],
+        'global': ['Top vs Bottom Band'],
+        'fixed': ['Index Count']
+      });
+    this.plotStats.set(this.textPlot, this.plotStats.get(this.mainPlot));
+ 
+    /* plot -> {local stat index, global stat index, fixed stat index}*/ 
+    this.plotIndices = new Map();
+    this.plotIndices.set(this.mainPlot, {'local': 0, 'global': 0, 'fixed': 0});     
+    this.plotIndices.set(this.secondaryPlot, {'local': 0, 'global': 0, 'fixed': 0});     
+    this.plotIndices.set(this.ternaryPlot, {'local': 0, 'global': 0, 'fixed': 0});     
+    this.plotIndices.set(this.bottomPlot, {'local': 0, 'global': 0, 'fixed': 0});     
+    this.plotIndices.set(this.textPlot, {'local': 0, 'global': 0, 'fixed': 0});     
+
     this.plotFuncs = new Map();
-    this.plotFuncs.set(this.mainPlot, Functions.defaultMain);
-    this.plotFuncs.set(this.bottomPlot, Functions.defaultMain);
-    this.plotFuncs.set(this.secondaryPlot, Functions.defaultMain);
-    this.plotFuncs.set(this.ternaryPlot, Functions.defaultMain);
-    this.plotFuncs.set(this.textPlot, Functions.defaultMain);
-  }
+    this.plotFuncs.set(this.mainPlot,
+      {'local': [Functions.defaultMain, Functions.defaultMain],
+        'global': [Functions.defaultMain],
+        'fixed': [Functions.defaultMain, Functions.defaultMain]
+      });
+    this.plotStats.set(this.secondaryPlot, this.plotStats.get(this.mainPlot));
+    this.plotStats.set(this.ternaryPlot, this.plotStats.get(this.mainPlot));
+    this.plotStats.set(this.bottomPlot,
+      {'local': [Functions.defaultMain],
+        'global': [Functions.defaultMain],
+        'fixed': [Functions.defaultMain]
+      });
+    this.plotStats.set(this.textPlot, this.plotStats.get(this.mainPlot));
+  } 
 
   /**
    * Changes the view. This method is called when the user clicks on one of the
@@ -21,7 +64,27 @@ class View {
    * @param {string} newView The name of the view to change to, which might take
    *     the value of either `"local"`, `"global"`, or `"fixed"`.
    */
-  changeView(newView, sequences, numbers) {}
+  changeView(newView) {
+    this.currView = newView;
+
+    for(let p of this.plots) {
+      p.clearPlot();
+      let index = this.plotIndices.get(p)[newView];
+      let menuItems = this.plotStats.get(p)[newView];
+      p.setMenuItems(index, menuItems);
+    }
+  }
+
+  /* plot is changing the plotted statistic to index */
+  changeStat(plot, index) {
+    this.plotIndices.get(plot)[this.currView] = index;
+    updatePlot(plot)
+  }
+
+  /* private func: update single plot */
+  updatePlot(plot) {
+     
+  }
 
   /**
    * Views an OEIS sequence. This method is called when the user clicks on a
@@ -32,21 +95,13 @@ class View {
    *     or `false` if they just deselected it.
    */
   viewSequence(sequence, index) {
-    let processedSequenceData = {
-      values: [],
-      xLabel: 'Indices',
-      yLabel: 'Values',
-      title: 'Terms',
-    };
-    for (let i = 0; i < sequence['terms'].length; i++) {
-      processedSequenceData['values'].push({
-        x: i + 1,
-        y: sequence['terms'][i],
-        magnitude: 1,
-      });
-    }
-    for (let plot of this.plotFuncs.keys())
-      plot.drawPlot(processedSequenceData);
+    /* deplotting */  
+    if(sequence == null) {
+      /* code goes here */
+      return;
+    }  
+
+    
   }
 
   /**
@@ -86,6 +141,7 @@ class View {
   }
 }
 
+/* functions used to pack data */
 class Functions {
   static defaultMain(json) {
     return {
