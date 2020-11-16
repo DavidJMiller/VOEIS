@@ -4,66 +4,66 @@
   font-family: 'Roboto';
   font-weight: normal;
   font-style: normal;
-  src: 'static/fonts/Roboto-Regular.ttf';
+  src: url('/static/fonts/Roboto-Regular.ttf');
 }
 
 @font-face {
   font-family: 'Roboto';
   font-weight: normal;
   font-style: italic;
-  src: 'static/fonts/Roboto-Italic.ttf';
+  src: url('/static/fonts/Roboto-Italic.ttf');
 }
 
 @font-face {
   font-family: 'Roboto';
   font-weight: bold;
   font-style: normal;
-  src: 'static/fonts/Roboto-Medium.ttf';
+  src: url('/static/fonts/Roboto-Medium.ttf');
 }
 
 @font-face {
   font-family: 'Roboto';
   font-weight: bold;
   font-style: italic;
-  src: 'static/fonts/Roboto-MediumItalic.ttf';
-}
-
-@font-face {
-  font-family: 'Roboto';
-  font-weight: normal;
-  font-style: normal;
-  src: 'static/fonts/cmunrm.ttf';
+  src: url('/static/fonts/Roboto-MediumItalic.ttf');
 }
 
 @font-face {
   font-family: 'Computer';
   font-weight: normal;
+  font-style: normal;
+  src: url('/static/fonts/cmunrm.ttf');
+}
+
+@font-face {
+  font-family: 'Computer';
+  font-weight: normal;
   font-style: italic;
-  src: 'static/fonts/cmunti.ttf';
+  src: url('/static/fonts/cmunti.ttf');
 }
 
 @font-face {
   font-family: 'Computer';
   font-weight: bold;
   font-style: normal;
-  src: 'static/fonts/cmunbx.ttf';
+  src: url('/static/fonts/cmunbx.ttf');
 }
 
 @font-face {
   font-family: 'Computer';
   font-weight: bold;
   font-style: italic;
-  src: 'static/fonts/cmunbl.ttf';
-}
-
-* {
-  font-family: 'Roboto';
+  src: url('/static/fonts/cmunbl.ttf');
 }
 
 :root {
   --gray-a-42: rgba(108, 117, 125, 0.4167);
   --red-a-42: rgba(220, 53, 69, 0.4167);
   --preset-list-height: 144px;
+}
+
+* {
+  font-family: 'Roboto';
 }
 
 html,
@@ -88,20 +88,6 @@ p {
   width: calc(100%);
 }
 
-*::-webkit-scrollbar {
-  width: 6px;
-  background-color: transparent;
-}
-
-*::-webkit-scrollbar-track {
-  opacity: 0;
-}
-
-*::-webkit-scrollbar-thumb,
-*::-webkit-scrollbar-thumb:hover {
-  background-color: transparent;
-}
-
 .container-fluid {
   padding: 0px;
   margin: 0px;
@@ -123,6 +109,45 @@ g[class^='col'] {
 
 .h-33 {
   height: calc(33.33%);
+}
+
+.custom-scrollbar {
+  transition: scrollbar-color 0.1736s;
+  scrollbar-color: transparent transparent;
+  scrollbar-width: thin;
+}
+
+.custom-scrollbar:hover {
+  scrollbar-color: var(--gray-a-42) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  background-color: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  opacity: 0;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: transparent;
+}
+
+.mini-button {
+  z-index: 1728;
+  transition: opacity 0.1736s;
+  opacity: 0.3333;
+  cursor: pointer;
+}
+
+.mini-button:hover {
+  opacity: 0.6667;
+}
+
+.mini-button:active {
+  opacity: 0.8333;
 }
 
 #main-wrapper {
@@ -152,7 +177,9 @@ g[class^='col'] {
 
 #search-bar-title b {
   font-family: 'Computer';
+  font-weight: bold;
   font-size: 96px;
+  letter-spacing: 4px;
   filter: drop-shadow(0px 0px 2px var(--pink));
 }
 
@@ -190,21 +217,14 @@ g[class^='col'] {
 
 #search-bar-clear-button {
   position: absolute;
-  top: calc(20.83%);
-  right: 66px;
-  z-index: 1728;
-  transition: opacity 0.1736s;
-  opacity: 0.3333;
-  cursor: pointer;
+  right: 57px;
   display: none;
-}
-
-#search-bar-clear-button:hover {
-  opacity: 0.6667;
+  padding: 9px 12px;
 }
 
 #search-bar-search-button {
   border-radius: 0px 6px 6px 0px;
+  padding: 0px 18px;
 }
 
 #search-bar-loading-indication {
@@ -301,8 +321,13 @@ g[class^='col'] {
   border-radius: 6px;
 }
 
-/****** MAIN VIEW *************************************************************/
+/****** PLOT ******************************************************************/
 
-/****** RIGHT VIEW ************************************************************/
+.plot {
+  margin: 66px 66px 66px 66px;
+}
 
-/****** BOTTOM VIEW ***********************************************************/
+.axis-label {
+  fill: black;
+  text-anchor: middle;
+}

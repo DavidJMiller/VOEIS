@@ -4,7 +4,7 @@
  *
  * VOEIS
  * David Miller, Kevin Song, and Qianlang Chen
- * F 11/13/20
+ * A 11/14/20
  */
 class SearchBar {
   //#region STATIC MEMBERS /////////////////////////////////////////////////////
@@ -240,7 +240,7 @@ class SearchBar {
               this.searchBox.classed('is-invalid', false);
               this.clearButton.style(
                   'display',
-                  () => this.searchBox.node().value ? 'initial' : 'none');
+                  () => this.searchBox.node().value ? 'inline-block' : 'none');
 
               if (!this.searchBox.node().value && this.resShowing) {
                 this.resShowing = null;
@@ -332,7 +332,7 @@ class SearchBar {
     this.elem.style(
         'height',
         `calc(100% - ${
-            newView == 'fixed' ? '18px' : 'var(--preset-list-height)'})`);
+            newView == 'fixed' ? '54px' : 'var(--preset-list-height)'})`);
 
     // update the result list
     if (newView == 'fixed' || !this.resShowing)
@@ -424,7 +424,8 @@ class SearchBar {
 
   /** @private Selects or deselects a search result item. */
   selectResItem(resItem) {
-    let elem = resItem.elem, isSelected = this.selections.has(resItem);
+    let elem = resItem.elem, isSelected = this.selections.has(resItem),
+        tarIndex = -1;
     if (isSelected) {  // deselect
       let indexArray = this.currView == 'fixed' ? this.numberSelectionByIndex :
                                                   this.sequenceSelectionByIndex;
@@ -435,8 +436,8 @@ class SearchBar {
       elem.classed('selected', false).style('background-color', '');
     } else {  // select
       let indexArray = this.currView == 'fixed' ? this.numberSelectionByIndex :
-                                                  this.sequenceSelectionByIndex,
-          tarIndex = indexArray.indexOf(null);  // assume always exists
+                                                  this.sequenceSelectionByIndex;
+      tarIndex = indexArray.indexOf(null);  // assume always exists
 
       indexArray[tarIndex] = resItem;
       this.selections.set(resItem, tarIndex);
@@ -453,9 +454,9 @@ class SearchBar {
 
     // notify the view
     if (this.currView == 'fixed')
-      this.view.viewNumber(resItem.rawData, !isSelected);
+      this.view.viewNumber(resItem.rawData, tarIndex);
     else
-      this.view.viewSequence(resItem.rawData, !isSelected);
+      this.view.viewSequence(resItem.rawData, tarIndex);
   }
 
   /** @private Deselects all selections. */

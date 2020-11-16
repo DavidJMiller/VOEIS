@@ -5,10 +5,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="shortcut icon" href="static/favicon.ico" type="image/ico" />
-  <link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon" />
   <link rel="icon" href="static/favicon.ico" type="image/ico" />
-  <link rel="icon" href="static/favicon.ico" type="image/x-icon" />
   <script
     src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://d3js.org/d3.v6.js"></script>
@@ -53,12 +50,13 @@
           <g class="input-group" style="margin-top: 18px;">
             <input id="search-bar-search-box" class="form-control"
               placeholder="Search Sequences" />
-            <span id="search-bar-clear-button"><i class="fas fa-times"></i>
+            <span id="search-bar-clear-button" class="mini-button">
+              <i class="fas fa-times"></i>
             </span>
             <div class="input-group-append">
               <button id="search-bar-search-button"
                 class="btn btn-outline-secondary">
-                &nbsp;<i class="fas fa-search">&nbsp;</i>
+                <i class="fas fa-search"></i>
               </button>
             </div>
             <div id="search-bar-invalid-tooltip" class="invalid-tooltip"></div>
@@ -72,7 +70,8 @@
               Try being more specific?
             </div>
           </g>
-          <g id="search-bar-result-list" class="d-flex flex-column-reverse"></g>
+          <g id="search-bar-result-list"
+            class="d-flex flex-column-reverse custom-scrollbar"></g>
         </div>
         <div id="preset-list" class="col-3 fixed-bottom">
           <div id="preset-list-title">Example Visualizations:</div>
@@ -89,52 +88,23 @@
       <div id="view-wrapper" class="col-9">
         <div class="row h-75" id="view-top">
           <div class="col-8">
-            <svg id="main-plot-svg" width="100%" height="100%">
-              <text x="50%" y="50%" text-anchor="middle"
-                style="fill: var(--gray)">
-                Main Plot
-              </text>
-              <rect width="100%" height="100%"
-                style="fill: var(--gray); opacity: .25;"></rect>
-            </svg>
+            <svg id="main-plot-svg" width="100%" height="100%"></svg>
           </div>
           <div id="right-view-wrapper" class="col-4">
             <div id="view-info" class="row h-33">
               <svg id="text-plot-svg" width="100%" height="100%"></svg>
             </div>
             <div class="row h-33">
-              <svg id="secondary-plot-svg" width="100%" height="100%">
-                <text x="50%" y="50%" text-anchor="middle"
-                  style="fill: var(--pink); opacity: .5;">
-                  Right View 1
-                </text>
-                <rect width="100%" height="100%"
-                  style="fill: var(--pink); opacity: .125;"></rect>
-              </svg>
+              <svg id="secondary-plot-svg" width="100%" height="100%"></svg>
             </div>
             <div class="row h-33">
-              <svg id="ternary-plot-svg" width="100%" height="100%">
-                <text x="50%" y="50%" text-anchor="middle"
-                  style="fill: var(--cyan); opacity: .5;">
-                  Right View 2
-                </text>
-                <rect width="100%" height="100%"
-                  style="fill: var(--cyan); opacity: .125;"></rect>
-              </svg>
+              <svg id="ternary-plot-svg" width="100%" height="100%"></svg>
             </div>
           </div>
         </div>
         <div class="row h-25">
           <div class="col-12">
-            <svg id="bottom-plot-svg" width="100%" height="100%">
-              <text x="50%" y="50%" text-anchor="middle"
-                style="fill: var(--purple); opacity: .5">
-                Bottom View
-              </text>
-              <rect width="100%" height="100%"
-                style="fill: none; stroke: var(--purple); stroke-width: 2px; opacity: 0.5;">
-              </rect>
-            </svg>
+            <svg id="bottom-plot-svg" width="100%" height="100%"></svg>
           </div>
         </div>
       </div>
