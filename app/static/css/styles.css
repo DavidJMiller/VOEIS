@@ -330,4 +330,10 @@ g[class^='col'] {
 .axis-label {
   fill: black;
   text-anchor: middle;
+  font-size: small;
+}
+
+.title-label {
+  fill: black;
+  text-anchor: middle;
 }

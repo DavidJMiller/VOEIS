@@ -33,6 +33,9 @@ class Plot {
     this.xAxisLabel = this.plot.append('text')
                           .attr('id', 'yLabel')
                           .attr('class', 'axis-label');
+    this.titleLabel = this.plot.append('text')
+                          .attr('id', 'titleLabel')
+                          .attr('class', 'title-label');
   }
 
   /* get appropriate function and send it data to plot */
@@ -54,35 +57,19 @@ class Visualizations {
   */
   static scatter(data, elem) {
     // create scale for axis
-    // set labels and title
-    // plot
-    // Setup the scales
-    console.log(data);
-    let widthScale = d3.scaleLinear()
-                         .domain([
-                           d3.min(data.values, d => d.x),
-                           d3.max(data.values, d => d.x),
-                         ])
-                         .range([
-                           Plot.PADDING_FACTOR,
-                           100 - Plot.PADDING_FACTOR,
-                         ]);
-    let heightScale = d3.scaleLinear()
-                          .domain([
-                            d3.min(data.values, d => d.y),
-                            d3.max(data.values, d => d.y),
-                          ])
-                          .range([
-                            100 - Plot.PADDING_FACTOR,
-                            Plot.PADDING_FACTOR,
-                          ]);
-    let radiusScale = d3.scaleLinear()
-                          .domain([
-                            0,
-                            d3.max(data.values, d => d.magnitude),
-                          ])
-                          .range([0, 6]);
 
+    let widthScale = d3.scaleLinear().domain(data['xExtent']).range([
+      Plot.PADDING_FACTOR,
+      100 - Plot.PADDING_FACTOR,
+    ]);
+    let heightScale = d3.scaleLinear().domain(data['yExtent']).range([
+      100 - Plot.PADDING_FACTOR,
+      Plot.PADDING_FACTOR,
+    ]);
+    let radiusScale =
+        d3.scaleLinear().domain(data['magnitudeExtent']).range([0, 6]);
+
+    // plot
     let circles = elem.selectAll('circle').data(data.values);
     circles.exit().remove()
     circles = circles.enter().append('circle').merge(circles);
@@ -92,37 +79,23 @@ class Visualizations {
         .style('fill', 'gray');
   }
   static scatterAxis(data, elem) {
-    if (data == null) {
-      // console.log('data is null');
-      return;
-    }
+    if (data == null) return;
+
     const plotWidth = elem.node().clientWidth,
           plotHeight = elem.node().clientHeight;
 
-    // console.log(elem.clientWidth);
     // create scale for axis
-
     let xAxisPadding = Plot.PADDING_FACTOR / 100 * plotWidth;
     let yAxisPadding = Plot.PADDING_FACTOR / 100 * plotHeight;
 
-    let xAxisScale = d3.scaleLinear()
-                         .domain([
-                           d3.min(data.values, d => d.x),
-                           d3.max(data.values, d => d.x),
-                         ])
-                         .range([
-                           0,
-                           plotWidth - xAxisPadding * 2,
-                         ]);
-    let yAxisScale = d3.scaleLinear()
-                         .domain([
-                           d3.min(data.values, d => d.y),
-                           d3.max(data.values, d => d.y),
-                         ])
-                         .range([
-                           plotHeight - yAxisPadding * 2,
-                           0,
-                         ]);
+    let xAxisScale = d3.scaleLinear().domain(data['xExtent']).range([
+      0,
+      plotWidth - xAxisPadding * 2,
+    ]);
+    let yAxisScale = d3.scaleLinear().domain(data['yExtent']).range([
+      plotHeight - yAxisPadding * 2,
+      0,
+    ]);
 
     let xAxis = d3.axisBottom().scale(xAxisScale).ticks(5);
     let yAxis = d3.axisRight().scale(yAxisScale).ticks(5);
@@ -131,19 +104,7 @@ class Visualizations {
     elem.select('#xAxis').call(xAxis);
     elem.select('#yAxis').call(yAxis);
 
-    // show axis labels
-
-    //   this.xAxisElem = this.plot.append('svg')
-    //                      .attr('x', Plot.PADDING_FACTOR + '%')
-    //                      .attr('y', 100 - Plot.PADDING_FACTOR + '%')
-    //                      .append('g')
-    //                      .attr('id', 'xAxis');
-    // this.yAxisElem = this.plot.append('svg')
-    //                      .attr('x', Plot.PADDING_FACTOR + '%')
-    //                      .attr('y', Plot.PADDING_FACTOR + '%')
-    //                      .append('g')
-    //                      .attr('id', 'yAxis');
-
+    // show axis and title labels
     let tf = `translate(${plotWidth / 2}, ${plotHeight - yAxisPadding + 36})`;
     elem.select('#xLabel').attr('transform', tf).text(data.xLabel);
 
@@ -151,5 +112,8 @@ class Visualizations {
     elem.select('#yLabel')
         .attr('transform', tf + 'rotate(-90)')
         .text(data.yLabel);
+
+    tf = `translate(${plotWidth / 2}, 24)`;
+    elem.select('#titleLabel').attr('transform', tf).text(data.title);
   }
 }
