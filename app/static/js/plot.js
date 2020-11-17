@@ -1,137 +1,131 @@
+/** M 11/16/20 */
 class Plot {
+  /** The extents to use (for both X and Y) when there is no data to plot. */
+  static DEFAULT_EXTENTS = [0, 12];
+
   static PADDING_FACTOR = 12.5;
 
   /* main, bottom, secondary, ternary, text */
-  constructor(plotID, plotType) {
-    this.plot = d3.select('#' + plotID);
-    this.plotType = plotType;
-    this.visType = new Map();
-    this.currData = null;
+  constructor(plotId, plotType) {
+    /**
+     * @private @type {Selection} A D3-selection containing a SVG for the plot.
+     */
+    this.plot = d3.select('#' + plotId);
 
-    this.visType.set('scatter', {
-      plotData: Visualizations.scatter,
-      plotAxes: Visualizations.scatterAxis
-    });
+    this.currPlotType = plotType;
 
-    window.addEventListener('resize', () => {
-      this.visType.get(this.plotType).plotAxes(this.currData, this.plot);
-    });
+    /**
+     * @private @type {Map<number, object>} The data currently displayed in this
+     *     plot, for each "color-index."
+     */
+    this.plottedData = new Map();
+
+    /** @private @type {object} The extents of the axes. */
+    this.extents = {
+      x: Plot.DEFAULT_EXTENTS.concat(),  // concat makes hard copies
+      y: Plot.DEFAULT_EXTENTS.concat(),
+    };
 
     this.xAxisElem = this.plot.append('svg')
                          .attr('x', Plot.PADDING_FACTOR + '%')
                          .attr('y', 100 - Plot.PADDING_FACTOR + '%')
                          .append('g')
-                         .attr('id', 'xAxis');
+                         .attr('id', 'plot-x-axis');
     this.yAxisElem = this.plot.append('svg')
                          .attr('x', Plot.PADDING_FACTOR + '%')
                          .attr('y', Plot.PADDING_FACTOR + '%')
                          .append('g')
-                         .attr('id', 'yAxis');
+                         .attr('id', 'plot-y-axis');
     this.xAxisLabel = this.plot.append('text')
-                          .attr('id', 'xLabel')
+                          .attr('id', 'plot-x-label-text')
                           .attr('class', 'axis-label');
     this.xAxisLabel = this.plot.append('text')
-                          .attr('id', 'yLabel')
+                          .attr('id', 'plot-y-label-text')
                           .attr('class', 'axis-label');
     this.titleLabel = this.plot.append('text')
-                          .attr('id', 'titleLabel')
+                          .attr('id', 'plot-title-text')
                           .attr('class', 'title-label');
+
+    let onWindowResize = () => {
+      Visualizations.PLOT_TYPES[this.currPlotType]['plotAxes'](
+          this.extents, this.plot);
+    };
+
+    window.addEventListener('resize', onWindowResize);
+    onWindowResize();  // force a resize now
   }
 
   /* get appropriate function and send it data to plot */
   drawPlot(data, index) {
-    this.currData = data;
-    this.visType.get(this.plotType).plotData(data, this.plot);
-    this.visType.get(this.plotType).plotAxes(data, this.plot);
+    let visFuncs = Visualizations.PLOT_TYPES[this.currPlotType];
 
-    /* TODO:
-      When index passed already exists, we are deplotting. Data is arbitrary.  
-    */
+    if (data)
+      this.plottedData.set(index, data);
+    else
+      this.plottedData.delete(index);
+
+    if (this.calculateExtents(data)) {
+      visFuncs['plotAxes'](this.extents, this.plot);
+      for (let [i, plottedData] of this.plottedData) {
+        if (i == index) continue;  // don't move the new data before drawing
+        visFuncs['plotData'](plottedData, this.extents, i, this.plot);
+      }
+    }
+    visFuncs['plotData'](data, this.extents, index, this.plot);
   }
 
   /* remove drawn elements, but not axis */
   clearPlot() {
-    this.plot.selectAll('data-elem').remove();
+    this.plot.selectAll('.plot-data-elem-wrapper').remove();
+    this.plottedData.clear();
   }
-  
-  /* set plottable stats for this plot */
+
+  /* set plot-able stats for this plot */
   setMenuItems(index, menuItems) {
     /* TODO:
-      We are plotting the statistic menuItems[index]. Alos let
+      We are plotting the statistic menuItems[index]. Also let
       dropdown have items in menuItems.
     */
+    // GG: do this later after multiple selection and deletion are working
+    // correctly.
   }
 
-}
+  /**
+   * @private Finds the extreme X- and Y-values as the new extents.
+   * @returns Whether the extents has changed, which would trigger a re-draw.
+   */
+  calculateExtents(newData) {
+    let xMin, xMax, yMin, yMax;
+    if (newData && this.plottedData.size) {  // `newData` is the new selection
+      xMin = Math.min(this.extents['x'][0], newData['xExtent'][0]);
+      xMax = Math.max(this.extents['x'][1], newData['xExtent'][1]);
+      yMin = Math.min(this.extents['y'][0], newData['yExtent'][0]);
+      yMax = Math.max(this.extents['y'][1], newData['yExtent'][1]);
+    } else {  // a deselection by the user
+      xMin = Infinity, yMin = Infinity;
+      xMax = -Infinity, yMax = -Infinity;
+      for (let data of this.plottedData.values()) {
+        xMin = Math.min(xMin, data['xExtent'][0]);
+        xMax = Math.max(xMax, data['xExtent'][1]);
+        yMin = Math.min(xMin, data['yExtent'][0]);
+        yMax = Math.max(xMax, data['yExtent'][1]);
+      }
+      console.log(xMin, xMax);
+      if (xMin == Infinity) {  // no data left
+        xMin = yMin = Plot.DEFAULT_EXTENTS[0];
+        xMax = yMax = Plot.DEFAULT_EXTENTS[1];
+      }
+    }
 
-class Visualizations {
-  /* we are getting dictionary of form
-      x:[size n]
-      y:[size n]
-      yLabel:string
-      xLabel:string
-      title:string
-      magnitudes:[size n]
-  */
-  static scatter(data, elem) {
-    // create scale for axis
+    if (xMin == this.extents['x'][0] && xMax == this.extents['x'][1] &&
+        yMin == this.extents['y'][0] && yMax == this.extents['y'][1])
+      return false;
 
-    let widthScale = d3.scaleLinear().domain(data['xExtent']).range([
-      Plot.PADDING_FACTOR,
-      100 - Plot.PADDING_FACTOR,
-    ]);
-    let heightScale = d3.scaleLinear().domain(data['yExtent']).range([
-      100 - Plot.PADDING_FACTOR,
-      Plot.PADDING_FACTOR,
-    ]);
-    let radiusScale =
-        d3.scaleLinear().domain(data['magnitudeExtent']).range([0, 6]);
+    this.extents['x'][0] = xMin;
+    this.extents['x'][1] = xMax;
+    this.extents['y'][0] = yMin;
+    this.extents['y'][1] = yMax;
 
-    // plot
-    let circles = elem.selectAll('circle').data(data.values);
-    circles.exit().remove()
-    circles = circles.enter().append('circle').merge(circles);
-    circles.attr('cx', d => widthScale(d.x) + '%')
-        .attr('cy', d => {return heightScale(d.y) + '%'})
-        .attr('r', d => radiusScale(d.magnitude))
-        .style('fill', 'gray');
-  }
-  static scatterAxis(data, elem) {
-    if (data == null) return;
-
-    const plotWidth = elem.node().clientWidth,
-          plotHeight = elem.node().clientHeight;
-
-    // create scale for axis
-    let xAxisPadding = Plot.PADDING_FACTOR / 100 * plotWidth;
-    let yAxisPadding = Plot.PADDING_FACTOR / 100 * plotHeight;
-
-    let xAxisScale = d3.scaleLinear().domain(data['xExtent']).range([
-      0,
-      plotWidth - xAxisPadding * 2,
-    ]);
-    let yAxisScale = d3.scaleLinear().domain(data['yExtent']).range([
-      plotHeight - yAxisPadding * 2,
-      0,
-    ]);
-
-    let xAxis = d3.axisBottom().scale(xAxisScale).ticks(5);
-    let yAxis = d3.axisRight().scale(yAxisScale).ticks(5);
-
-    // plot axes
-    elem.select('#xAxis').call(xAxis);
-    elem.select('#yAxis').call(yAxis);
-
-    // show axis and title labels
-    let tf = `translate(${plotWidth / 2}, ${plotHeight - yAxisPadding + 36})`;
-    elem.select('#xLabel').attr('transform', tf).text(data.xLabel);
-
-    tf = `translate(${xAxisPadding - 12}, ${plotHeight / 2}) `;
-    elem.select('#yLabel')
-        .attr('transform', tf + 'rotate(-90)')
-        .text(data.yLabel);
-
-    tf = `translate(${plotWidth / 2}, 24)`;
-    elem.select('#titleLabel').attr('transform', tf).text(data.title);
+    return true;
   }
 }

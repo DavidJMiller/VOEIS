@@ -323,10 +323,6 @@ g[class^='col'] {
 
 /****** PLOT ******************************************************************/
 
-.plot {
-  margin: 66px 66px 66px 66px;
-}
-
 .axis-label {
   fill: black;
   text-anchor: middle;
