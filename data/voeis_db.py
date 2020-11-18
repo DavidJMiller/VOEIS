@@ -13,21 +13,23 @@ F 11/06/20
 SEQUENCE_DB_PATH = "data/sequences.txt"
 NUMBER_DB_PATH = "data/numbers.txt"
 
+MAX_NUM_SEQUENCES = 2**31 - 1
+MAX_NUM_NUMBERS = 20_736
 MAX_NEIGHBOR_OFFSET = 6
-MAX_NEIGHBORS_PER_OFFSET = int(2e9)
+MAX_NEIGHBORS_PER_OFFSET = 12
 
 sequence_data = {}
 number_data = {}
 
 
-def init(sequence_cap=int(2e9), number_cap=int(2e4)):
+def init():
     """
     Initializes the database by reading in the database files and
     constructing dictionaries for fast lookups.
     """
     with open(SEQUENCE_DB_PATH, "r") as sequence_db:
         for i, line in enumerate(sequence_db, 1):
-            if i == sequence_cap: break
+            if i == MAX_NUM_SEQUENCES: break
             if i % 50_000 == 0: print(f"    At sequence {i:,}")
             if not line: continue
             a_num, name, terms = line[:-1].split("\t")
@@ -40,7 +42,7 @@ def init(sequence_cap=int(2e9), number_cap=int(2e4)):
     
     with open(NUMBER_DB_PATH, "r") as number_db:
         for i, line in enumerate(number_db, 1):
-            if i == number_cap: break
+            if i == MAX_NUM_NUMBERS: break
             if i % 25_000 == 0: print(f"    At number {i:,}")
             if not line: continue
             basic_info, index_counts, neighbors = line[:-1].split("\t")
