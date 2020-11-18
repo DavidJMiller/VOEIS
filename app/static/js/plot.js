@@ -76,7 +76,7 @@ class Plot {
 
   /* remove drawn elements, but not axis */
   clearPlot() {
-    this.plot.selectAll('.plot-data-elem-wrapper').remove();
+    this.plot.selectAll('.plot-data-elem').remove();
     this.plottedData.clear();
   }
 
@@ -110,7 +110,6 @@ class Plot {
         yMin = Math.min(xMin, data['yExtent'][0]);
         yMax = Math.max(xMax, data['yExtent'][1]);
       }
-      console.log(xMin, xMax);
       if (xMin == Infinity) {  // no data left
         xMin = yMin = Plot.DEFAULT_EXTENTS[0];
         xMax = yMax = Plot.DEFAULT_EXTENTS[1];

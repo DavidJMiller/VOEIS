@@ -4,7 +4,7 @@ class View {
     this.currView = 'global';
 
     this.mainPlot = new Plot('main-plot-svg', 'scatter');
-    this.bottomPlot = new Plot('bottom-plot-svg', 'scatter');
+    this.bottomPlot = new Plot('bottom-plot-svg', 'grid');
     this.secondaryPlot = new Plot('secondary-plot-svg', 'scatter');
     this.ternaryPlot = new Plot('ternary-plot-svg', 'scatter');
     this.textPlot = new Plot('text-plot-svg', 'scatter');

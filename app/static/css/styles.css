@@ -57,6 +57,7 @@
 }
 
 :root {
+  --gray-a-8: rgba(108, 117, 125, 0.08333);
   --gray-a-42: rgba(108, 117, 125, 0.4167);
   --red-a-42: rgba(220, 53, 69, 0.4167);
   --preset-list-height: 144px;
