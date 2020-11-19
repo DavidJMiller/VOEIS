@@ -1,14 +1,12 @@
-/** M 11/16/20 */
+/** W 11/18/20 */
 class Plot {
   /** The extents to use (for both X and Y) when there is no data to plot. */
   static DEFAULT_EXTENTS = [0, 12];
 
-  static PADDING_FACTOR = 12.5;
-
   /* main, bottom, secondary, ternary, text */
   constructor(plotId, plotType) {
     /**
-     * @private @type {Selection} A D3-selection containing a SVG for the plot.
+     * @private @type {Selection} A D3-selection containing an SVG for the plot.
      */
     this.plot = d3.select('#' + plotId);
 
@@ -26,29 +24,31 @@ class Plot {
       y: Plot.DEFAULT_EXTENTS.concat(),
     };
 
+    this.xLabel = 'Some X-Values';
+
+    this.yLabel = 'Some Y-Values';
+
+    this.title = 'Some Plot';
+
     this.xAxisElem = this.plot.append('svg')
-                         .attr('x', Plot.PADDING_FACTOR + '%')
-                         .attr('y', 100 - Plot.PADDING_FACTOR + '%')
+                         .attr('y', '100%')
                          .append('g')
                          .attr('id', 'plot-x-axis');
-    this.yAxisElem = this.plot.append('svg')
-                         .attr('x', Plot.PADDING_FACTOR + '%')
-                         .attr('y', Plot.PADDING_FACTOR + '%')
-                         .append('g')
-                         .attr('id', 'plot-y-axis');
-    this.xAxisLabel = this.plot.append('text')
+    this.yAxisElem =
+        this.plot.append('svg').append('g').attr('id', 'plot-y-axis');
+    this.xLabelElem = this.plot.append('text')
                           .attr('id', 'plot-x-label-text')
-                          .attr('class', 'axis-label');
-    this.xAxisLabel = this.plot.append('text')
+                          .attr('class', 'x-axis-label');
+    this.yLabelElem = this.plot.append('text')
                           .attr('id', 'plot-y-label-text')
-                          .attr('class', 'axis-label');
-    this.titleLabel = this.plot.append('text')
-                          .attr('id', 'plot-title-text')
-                          .attr('class', 'title-label');
+                          .attr('class', 'y-axis-label');
+    this.titleElem = this.plot.append('text')
+                         .attr('id', 'plot-title-text')
+                         .attr('class', 'title-label');
 
     let onWindowResize = () => {
       Visualizations.PLOT_TYPES[this.currPlotType]['plotAxes'](
-          this.extents, this.plot);
+          this.xLabel, this.yLabel, this.title, this.extents, this.plot);
     };
 
     window.addEventListener('resize', onWindowResize);
@@ -65,7 +65,8 @@ class Plot {
       this.plottedData.delete(index);
 
     if (this.calculateExtents(data)) {
-      visFuncs['plotAxes'](this.extents, this.plot);
+      visFuncs['plotAxes'](
+          this.xLabel, this.yLabel, this.title, this.extents, this.plot);
       for (let [i, plottedData] of this.plottedData) {
         if (i == index) continue;  // don't move the new data before drawing
         visFuncs['plotData'](plottedData, this.extents, i, this.plot);
@@ -107,8 +108,8 @@ class Plot {
       for (let data of this.plottedData.values()) {
         xMin = Math.min(xMin, data['xExtent'][0]);
         xMax = Math.max(xMax, data['xExtent'][1]);
-        yMin = Math.min(xMin, data['yExtent'][0]);
-        yMax = Math.max(xMax, data['yExtent'][1]);
+        yMin = Math.min(yMin, data['yExtent'][0]);
+        yMax = Math.max(yMax, data['yExtent'][1]);
       }
       if (xMin == Infinity) {  // no data left
         xMin = yMin = Plot.DEFAULT_EXTENTS[0];

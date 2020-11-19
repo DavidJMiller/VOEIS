@@ -32,6 +32,7 @@ class SearchBar {
     'A000396',
     'A002182',
     'A006370',
+    'A001057', // used to test some negative values in the grid plot
   ];
 
   /** The A-numbers of the sequences in each sequence-preset. */

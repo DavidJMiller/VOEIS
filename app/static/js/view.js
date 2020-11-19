@@ -1,4 +1,4 @@
-/** M 11/16/20 */
+/** W 11/18/20 */
 class View {
   constructor() {
     this.currView = 'global';
@@ -20,40 +20,57 @@ class View {
     this.plotStats.set(this.mainPlot, {
       'local': ['Sequence Terms', 'Growth Rate'],
       'global': ['Sloane\'s'],
-      'fixed': ['Neighbors', 'Index Count']
+      'fixed': ['Neighbors', 'Index Count'],
     });
     this.plotStats.set(this.secondaryPlot, this.plotStats.get(this.mainPlot));
     this.plotStats.set(this.ternaryPlot, this.plotStats.get(this.mainPlot));
     this.plotStats.set(this.bottomPlot, {
       'local': ['GH Squares'],
       'global': ['Top vs Bottom Band'],
-      'fixed': ['Index Count']
+      'fixed': ['Index Count'],
     });
     this.plotStats.set(this.textPlot, this.plotStats.get(this.mainPlot));
 
     /* plot -> {local stat index, global stat index, fixed stat index}*/
     this.plotIndices = new Map();
-    this.plotIndices.set(this.mainPlot, {'local': 0, 'global': 0, 'fixed': 0});
-    this.plotIndices.set(
-        this.secondaryPlot, {'local': 0, 'global': 0, 'fixed': 0});
-    this.plotIndices.set(
-        this.ternaryPlot, {'local': 0, 'global': 0, 'fixed': 0});
-    this.plotIndices.set(
-        this.bottomPlot, {'local': 0, 'global': 0, 'fixed': 0});
-    this.plotIndices.set(this.textPlot, {'local': 0, 'global': 0, 'fixed': 0});
+    this.plotIndices.set(this.mainPlot, {
+      'local': 0,
+      'global': 0,
+      'fixed': 0,
+    });
+    this.plotIndices.set(this.secondaryPlot, {
+      'local': 0,
+      'global': 0,
+      'fixed': 0,
+    });
+    this.plotIndices.set(this.ternaryPlot, {
+      'local': 0,
+      'global': 0,
+      'fixed': 0,
+    });
+    this.plotIndices.set(this.bottomPlot, {
+      'local': 0,
+      'global': 0,
+      'fixed': 0,
+    });
+    this.plotIndices.set(this.textPlot, {
+      'local': 0,
+      'global': 0,
+      'fixed': 0,
+    });
 
     this.plotFuncs = new Map();
     this.plotFuncs.set(this.mainPlot, {
       'local': [Functions.sequence, Functions.sequence],
       'global': [Functions.sequence],
-      'fixed': [Functions.sequence, Functions.sequence]
+      'fixed': [Functions.indexCount, Functions.indexCount],
     });
     this.plotFuncs.set(this.secondaryPlot, this.plotFuncs.get(this.mainPlot));
     this.plotFuncs.set(this.ternaryPlot, this.plotFuncs.get(this.mainPlot));
     this.plotFuncs.set(this.bottomPlot, {
       'local': [Functions.sequence],
       'global': [Functions.sequence],
-      'fixed': [Functions.sequence]
+      'fixed': [Functions.indexCount],
     });
     this.plotFuncs.set(this.textPlot, this.plotFuncs.get(this.mainPlot));
 
@@ -135,8 +152,10 @@ class View {
       }
     } else {
       let plotData;
+      let plotIndex;
       for (let plot of this.plots) {
-        plotData = this.plotFuncs.get(plot)[this.currView][index](sequence);
+        plotIndex = this.plotIndices.get(plot)[this.currView];
+        plotData = this.plotFuncs.get(plot)[this.currView][plotIndex](number);
         plot.drawPlot(plotData, index);
       }
     }
@@ -164,11 +183,11 @@ Then we send data to plots in the form
     yLabel: "..."
 */
 class Functions {
-  static indexCount(json) {
+  static indexCount(number) {
     let x = [], y = [];
-    for (let index in json['index_counts']) {
+    for (let index in number['index_counts']) {
       x.push(+index);
-      y.push(json['index_counts'][index]);
+      y.push(number['index_counts'][index]);
     }
     return {
       'x': x,
@@ -181,12 +200,12 @@ class Functions {
     };
   }
 
-  static sequence(json) {
+  static sequence(sequence) {
     return {
-      'x': Array(json.terms.length).fill().map((x, i) => i + 1),
-      'y': json.terms.map(x => x),
-      'xExtent': [0, json.terms.length],
-      'yExtent': d3.extent(json.terms),
+      'x': Array(sequence.terms.length).fill().map((x, i) => i + 1),
+      'y': sequence.terms.map(x => x),
+      'xExtent': [0, sequence.terms.length],
+      'yExtent': d3.extent(sequence.terms),
       'title': 'Sequence Terms',
       'xLabel': 'Index',
       'yLabel': 'Value'

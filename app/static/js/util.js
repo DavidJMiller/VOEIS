@@ -4,7 +4,7 @@
  *
  * VOEIS
  * David Miller, Kevin Song, and Qianlang Chen
- * H 11/12/20
+ * W 11/18/20
  */
 class Util {
   /**
@@ -21,8 +21,7 @@ class Util {
    */
   static generateColor(index, startHue = 210, saturation = 1, lightness = 0.5) {
     const GOLDEN_ANGLE_DEG = 137.5077640500379;
-    let hue =
-        Math.round(((GOLDEN_ANGLE_DEG * index + startHue) % 360 + 360) % 360);
+    let hue = Math.round((GOLDEN_ANGLE_DEG * index + startHue) % 360 + 360);
 
     return `${hue}, ${saturation * 100}%, ${lightness * 100}%`;
   }

@@ -13,11 +13,8 @@ class Visualizations {
   //#region CONSTANTS //////////////////////////////////////////////////////////
 
   /**
-   * @type {Object<string, {plotData: function({x: number[], y: number[],
-   *     xExtent: number[], yExtent: number[], title: string, xLabel: string,
-   *     yLabel: string}, {x: number[], y: number[]}, number, Selection):void,
-   *     'plotAxes': function({x: number[], y: number[]}, Selection):void}>}}
-   * Maps each plot type to the appropriate visualization functions.
+   * @type {object} Maps each plot type to the appropriate visualization
+   *     functions.
    */
   static PLOT_TYPES = {
     'grid': {
@@ -29,6 +26,11 @@ class Visualizations {
       'plotAxes': Visualizations.scatterAxes,
     },
   };
+  // plotData:
+  // (1) new selection (once for the new selection)
+  // (2) when extents change (n-1 times where n is number of selections)
+  // (3) deselect (once for the deselection)
+  // plotAxes: whenever window size changes
 
   /** The total duration of a transition in milliseconds. */
   static TOTAL_TRANSITION_DURATION = 2083;
@@ -38,19 +40,22 @@ class Visualizations {
 
   //#endregion
 
-  //#region GRID ////////////////////////////////////////////////////////
+  //#region GRID ///////////////////////////////////////////////////////////////
 
   /** The default base to use in the grid plot. */
   static GRID_DEFAULT_BASE = 10;
 
   /** The number of columns in the grid plot. */
-  static GRID_NUM_COLUMNS = 50;
+  static GRID_NUM_COLS = 72;
 
   /**
    * The maximum number of empty columns kept in the grid before it collapses
    * and injects ellipses.
    */
-  static GRID_MAX_EMPTY_COLUMNS = 2;
+  static GRID_MAX_EMPTY_COLS = 2;
+
+  /** The number of columns the ellipses should take up. */
+  static GRID_ELLIPSES_COLS = 2;
 
   /**
    * The fraction of the length of a cell in the grid plot to leave as the
@@ -58,6 +63,9 @@ class Visualizations {
    */
   static GRID_CELL_PADDING_FACTOR = 0.0625;
 
+  /**
+   * The corner radius of a cell in pixels. (TODO: this doesn't work in SVGs)
+   */
   static GRID_CELL_CORNER_RADIUS = 2;
 
   static grid(data, extents, index, elem) {
@@ -74,28 +82,29 @@ class Visualizations {
         'cells': new Map(),
       });
     }
+    const base = metadata['base'], sequences = metadata['sequences'],
+          cells = metadata['cells'];
 
     // update the cells
     //
     // handle deselection: delete this index from plotted numbers
     if (!data) {
-      for (let num of metadata['sequences'].get(index)) {
-        if (!metadata['cells'].has(num)) continue;
-        if (metadata['cells'].get(num).delete(index) &&
-            !metadata['cells'].get(num).size)
-          metadata['cells'].delete(num);
+      for (let num of sequences.get(index)) {
+        if (!cells.has(num)) continue;
+        if (cells.get(num).delete(index) && !cells.get(num).size)
+          cells.delete(num);
       }
-      metadata['sequences'].delete(index);
+      sequences.delete(index);
     } else {
       // handle movement: nothing to handle for this particular vis
-      if (metadata['sequences'].has(index)) return;
+      if (sequences.has(index)) return;
 
       // handle new selection: add this index to plotted numbers; numbers in the
       // sequences are given as the Y-values
-      metadata['sequences'].set(index, data['y']);
+      sequences.set(index, data['y']);
       for (let num of data['y']) {
-        if (!metadata['cells'].has(num)) metadata['cells'].set(num, new Set());
-        metadata['cells'].get(num).add(index);
+        if (!cells.has(num)) cells.set(num, new Set());
+        cells.get(num).add(index);
       }
     }
 
@@ -106,10 +115,9 @@ class Visualizations {
     // and let `null` represent a cell in an empty column which should not be
     // displayed.
 
-    const numCells = metadata['base'] * Visualizations.GRID_NUM_COLUMNS;
+    const numCols = Visualizations.GRID_NUM_COLS, numCells = base * numCols;
 
-    let nums = Array.from(metadata['cells'].keys()).sort((x, y) => x - y),
-        zeroIndex;
+    let nums = Array.from(cells.keys()).sort((x, y) => x - y), zeroIndex;
     if (!nums.length || nums[0] >= 0)
       zeroIndex = 0;
     else if (nums[nums.length - 1] < 0)
@@ -119,74 +127,73 @@ class Visualizations {
 
     // fake a linked list by setting zero at the middle
     let buffer = new Array(2 * numCells).fill([]),
-        isColumnSkipped =
-            new Array(2 * Visualizations.GRID_NUM_COLUMNS).fill(false);
+        isColumnSkipped = new Array(2 * numCols).fill(false);
 
-    let currColumn = 0, prevColumn = 0;
+    let currCol = 0, prevCol = 0;
     for (let i = zeroIndex; i < nums.length; i++) {
-      currColumn = Math.floor(nums[i] / metadata['base']);
-      if (currColumn > prevColumn + Visualizations.GRID_MAX_EMPTY_COLUMNS + 1) {
-        currColumn = prevColumn + Visualizations.GRID_MAX_EMPTY_COLUMNS + 1;
-        for (let j = 1; j <= Visualizations.GRID_MAX_EMPTY_COLUMNS; j++)
-          isColumnSkipped[Visualizations.GRID_NUM_COLUMNS + prevColumn + j] =
-              true;
+      currCol = Math.floor(nums[i] / base);
+      if (currCol > prevCol + Visualizations.GRID_MAX_EMPTY_COLS + 1) {
+        currCol = prevCol + Visualizations.GRID_ELLIPSES_COLS + 1;
+        if (currCol >= numCols) break;
+        for (let j = 1; j <= Visualizations.GRID_ELLIPSES_COLS; j++)
+          isColumnSkipped[numCols + prevCol + j] = true;
       }
-      if (currColumn >= isColumnSkipped.length / 2) break;
-      prevColumn = currColumn;
+      prevCol = currCol;
 
-      let cellIndex =
-          numCells + currColumn * metadata['base'] + nums[i] % metadata['base'];
-      buffer[cellIndex] =
-          Array.from(metadata['cells'].get(nums[i])).sort((x, y) => x - y);
+      const cellIndex = numCells + currCol * base + nums[i] % base;
+      buffer[cellIndex] = Array.from(cells.get(nums[i])).sort((x, y) => x - y);
     }
 
-    currColumn = -1, prevColumn = -1;
-    for (let i = zeroIndex; i < nums.length; i++) {
-      currColumn = Math.floor(nums[i] / metadata['base']);
-      if (currColumn < prevColumn + Visualizations.GRID_MAX_EMPTY_COLUMNS - 1) {
-        currColumn = prevColumn + Visualizations.GRID_MAX_EMPTY_COLUMNS - 1;
-        for (let j = 1; j <= Visualizations.GRID_MAX_EMPTY_COLUMNS; j++)
-          isColumnSkipped[Visualizations.GRID_NUM_COLUMNS + prevColumn - j] =
-              true;
+    currCol = -1, prevCol = -1;
+    for (let i = zeroIndex - 1; i >= 0; i--) {
+      currCol = Math.floor(nums[i] / base);
+      if (currCol < prevCol - Visualizations.GRID_MAX_EMPTY_COLS - 1) {
+        if (currCol < -numCols) break;
+        currCol = prevCol - Visualizations.GRID_ELLIPSES_COLS - 1;
+        for (let j = 1; j <= Visualizations.GRID_ELLIPSES_COLS; j++)
+          isColumnSkipped[numCols + prevCol - j] = true;
       }
-      if (currColumn < isColumnSkipped.length / 2) break;
-      prevColumn = currColumn;
+      prevCol = currCol;
 
-      let cellIndex = numCells + currColumn * metadata['base'] +
-          (nums[i] % metadata['base'] + metadata['base']) % metadata['base'];
-      buffer[cellIndex] =
-          Array.from(metadata['cells'].get(nums[i])).sort((x, y) => x - y);
+      const cellIndex = numCells + currCol * base + nums[i] % base + base;
+      buffer[cellIndex] = Array.from(cells.get(nums[i])).sort((x, y) => x - y);
     }
 
-    for (let i = 0; i < isColumnSkipped.length; i++)
+    for (let i = 0; i < 2 * numCols; i++)
       if (isColumnSkipped[i])
-        for (let j = 0; j < metadata['base']; j++)
-          buffer[i * metadata['base'] + j] = null;
+        for (let j = 0; j < base; j++) buffer[i * base + j] = null;
 
-    let firstIndex = Math.floor(
-                         Math.max(buffer.findIndex(x => x.length), 0) /
-                         metadata['base']) *
-        metadata['base'],
-        cellData = buffer.slice(firstIndex, firstIndex + numCells);
+    // construct cell data
+    let start = numCols, end = Infinity;
+    for (let i = 2 * numCols - 1; i >= numCols && end == Infinity; i--) {
+      for (let j = 0; j < base; j++) {
+        if (buffer[i * base + j].length) {
+          end = i + 1;
+          break;
+        }
+      }
+    }
+    for (let i = 0; i < numCols && start == numCols; i++) {
+      for (let j = 0; j < base; j++) {
+        if (buffer[i * base + j].length) {
+          start = i;
+          break;
+        }
+      }
+    }
+    let cellData;
+    if (start < numCols / 2) {
+      end = Math.min(end, Math.ceil(numCells * 1.5));
+      cellData = buffer.slice(end * base - numCells, end * base);
+    } else {
+      cellData = buffer.slice(start * base, start * base + numCells);
+    }
 
-    const xScale = d3.scaleLinear()
-                       .domain([
-                         0,
-                         Visualizations.GRID_NUM_COLUMNS,
-                       ])
-                       .range([
-                         Plot.PADDING_FACTOR,
-                         100 - Plot.PADDING_FACTOR,
-                       ]);
-    const yScale = d3.scaleLinear()
-                       .domain([
-                         0,
-                         metadata['base'],
-                       ])
-                       .range([
-                         100 - Plot.PADDING_FACTOR,
-                         Plot.PADDING_FACTOR,
-                       ]);
+    const xScale =
+        d3.scaleLinear().domain([0, Visualizations.GRID_NUM_COLS]).range([
+          0, 100
+        ]);
+    const yScale = d3.scaleLinear().domain([0, base]).range([100, 0]);
 
     const cellWidth = (xScale(1) - xScale(0)) *
         (1 - 2 * Visualizations.GRID_CELL_PADDING_FACTOR),
@@ -197,37 +204,42 @@ class Visualizations {
           cellYOffset =
               (yScale(0) - yScale(1)) * Visualizations.GRID_CELL_PADDING_FACTOR;
 
-    let cells = elem.selectAll('rect').data(cellData);
-    cells = cells.enter().append('rect').merge(cells);
-
-    //     enteredCells = cells.enter();
-    // enteredCells.append('rect')
-    cells.attr('rx', Visualizations.GRID_CELL_CORNER_RADIUS)
-        .attr('ry', Visualizations.GRID_CELL_CORNER_RADIUS)
-        .attr(
-            'x',
-            (_d, i) =>
-                xScale(Math.floor(i / metadata['base'])) + cellXOffset + '%')
-        .attr(
-            'y',
-            (_d, i) => yScale(i % metadata['base'] + 1) + cellYOffset + '%')
-        .attr('width', cellWidth + '%')
+    let cellElems = elem.selectAll('svg').data(cellData);
+    cellElems = cellElems.enter()
+                    .append('svg')
+                    .attr('class', 'plot-data-elem')
+                    .merge(cellElems);
+    cellElems
+        .attr('x', (_d, i) => xScale(Math.floor(i / base)) + cellXOffset + '%')
+        .attr('y', (_d, i) => yScale(i % base + 1) + cellYOffset + '%');
+    let cellBackgrounds = cellElems.selectAll('.plot-grid-cell-background')
+                              .data(d => d ? [0] : []);
+    cellBackgrounds.exit().remove();
+    cellBackgrounds.enter()
+        .append('rect')
+        .attr('class', 'plot-grid-cell-background')
+        .attr('width', (_d, _i, a) => cellWidth / a.length + '%')
         .attr('height', cellHeight + '%');
-    // // .style('opacity', 0)
-    // // .transition('fade')
-    // // .ease(d3.easeSinOut)
-    // // .duration(Visualizations.TRANSITION_DURATION)
-    // // .style('opacity', 1);
-    // cells = enteredCells.merge(cells);
-    cells.style('fill', d => {
-      if (!d) return 'transparent';
-      if (!d.length) return 'var(--gray-a-8)';
 
-      return `hsla(${Util.generateColor(d[0])}, 0.3333)`;
-    });
+    cellElems.filter(d => !d).selectAll('.plot-grid-cell').remove();
+
+    let cellContents =
+        cellElems.filter(d => d).selectAll('.plot-grid-cell').data(d => d);
+    cellContents.exit().remove();
+    cellContents = cellContents.enter()
+                       .append('rect')
+                       .attr('class', 'plot-grid-cell')
+                       .merge(cellContents);
+    cellContents
+        .attr('x', (_d, i, a) => (cellXOffset + cellWidth / a.length * i) + '%')
+        .attr('width', (_d, _i, a) => cellWidth / a.length + '%')
+        .attr('height', cellHeight + '%')
+        .style('fill', d => `hsla(${Util.generateColor(d)}, 0.3333)`);
   }
 
-  static gridAxes(extents, elem) {}
+  static gridAxes(xLabel, yLabel, title, extents, elem) {}
+
+  //#endregion
 
   //#region SCATTER ////////////////////////////////////////////////////////////
 
@@ -243,7 +255,7 @@ class Visualizations {
     if (!data) {  // data is null: user deselected, remove elements
       wrapper.selectAll('circle')
           .transition('fade')
-          .ease(d3.easeSinOut)
+          .ease(d3.easeSinIn)
           .duration(Visualizations.TRANSITION_DURATION)
           .attr('r', 0)
           .on('end', () => wrapper.remove());
@@ -254,18 +266,11 @@ class Visualizations {
     const maxMagnitude =
         data.hasOwnProperty('magnitudes') ? Math.max(...data['magnitudes']) : 1;
 
-    const xScale = d3.scaleLinear().domain(extents['x']).range([
-      Plot.PADDING_FACTOR,
-      100 - Plot.PADDING_FACTOR,
-    ]);
-    const yScale = d3.scaleLinear().domain(extents['y']).range([
-      100 - Plot.PADDING_FACTOR,
-      Plot.PADDING_FACTOR,
-    ]);
-    const rScale = d3.scaleSqrt().domain([0, maxMagnitude]).range([
-      0,
-      Visualizations.SCATTER_MAX_RADIUS,
-    ]);
+    const xScale = d3.scaleLinear().domain(extents['x']).range([0, 100]),
+          yScale = d3.scaleLinear().domain(extents['y']).range([100, 0]),
+          rScale = d3.scaleSqrt().domain([0, maxMagnitude]).range([
+            0, Visualizations.SCATTER_MAX_RADIUS
+          ]);
 
     if (!wrapper.empty()) {  // extent has been changed: move the elements
       wrapper.selectAll('circle')
@@ -307,27 +312,19 @@ class Visualizations {
             (_d, i) => rScale(data['magnitude'] ? data['magnitude'][i] : 1));
   }
 
-  static scatterAxes(extents, elem) {
+  static scatterAxes(xLabel, yLabel, title, extents, elem) {
     // this function is called any time whenever there is a need to redraw the
     // axes
     const plotWidth = elem.node().clientWidth,
           plotHeight = elem.node().clientHeight;
 
     // create scale for axis
-    const xAxisPadding = Plot.PADDING_FACTOR / 100 * plotWidth;
-    const yAxisPadding = Plot.PADDING_FACTOR / 100 * plotHeight;
-
-    const xAxisScale = d3.scaleLinear().domain(extents['x']).range([
-      0,
-      plotWidth - xAxisPadding * 2,
-    ]);
-    const yAxisScale = d3.scaleLinear().domain(extents['y']).range([
-      plotHeight - yAxisPadding * 2,
-      0,
-    ]);
-
-    const xAxis = d3.axisBottom().scale(xAxisScale).ticks(5);
-    const yAxis = d3.axisRight().scale(yAxisScale).ticks(5);
+    const xAxisScale =
+        d3.scaleLinear().domain(extents['x']).range([0, plotWidth]),
+          yAxisScale =
+              d3.scaleLinear().domain(extents['y']).range([plotHeight, 0]),
+          xAxis = d3.axisBottom().scale(xAxisScale).ticks(5),
+          yAxis = d3.axisLeft().scale(yAxisScale).ticks(5);
 
     // plot axes
     elem.select('#plot-x-axis')
@@ -342,16 +339,20 @@ class Visualizations {
         .call(yAxis);
 
     // show axis and title labels
-    let tf = `translate(${plotWidth / 2}, ${plotHeight - yAxisPadding + 36})`;
-    elem.select('#plot-x-label-text').attr('transform', tf).text('X-Label');
+    let tf = `translate(${plotWidth / 2}, ${plotHeight + 32})`;
+    elem.select('#plot-x-label-text').attr('transform', tf).text(xLabel);
 
-    tf = `translate(${xAxisPadding - 12}, ${plotHeight / 2}) `;
+    tf = `translate(${- extents['y'].toString().length * 7}, ${
+        plotHeight / 2}) `;
     elem.select('#plot-y-label-text')
-        .attr('transform', tf + 'rotate(-90)')
-        .text('Y-Label');
+        .text(yLabel)
+        .transition()
+        .ease(d3.easeSinOut)
+        .duration(Visualizations.TRANSITION_DURATION)
+        .attr('transform', tf + 'rotate(-90)');
 
-    tf = `translate(${plotWidth / 2}, 24)`;
-    elem.select('#plot-title-text').attr('transform', tf).text('Plot');
+    tf = `translate(${plotWidth / 2}, -8)`;
+    elem.select('#plot-title-text').attr('transform', tf).text(title);
   }
 
   //#endregion

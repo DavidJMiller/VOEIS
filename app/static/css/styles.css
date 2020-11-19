@@ -58,6 +58,7 @@
 
 :root {
   --gray-a-8: rgba(108, 117, 125, 0.08333);
+  --gray-a-25: rgba(108, 117, 125, 0.25);
   --gray-a-42: rgba(108, 117, 125, 0.4167);
   --red-a-42: rgba(220, 53, 69, 0.4167);
   --preset-list-height: 144px;
@@ -87,6 +88,10 @@ p {
   text-overflow: ellipsis;
   overflow: hidden;
   width: calc(100%);
+}
+
+svg {
+  overflow: visible;
 }
 
 .container-fluid {
@@ -324,13 +329,34 @@ g[class^='col'] {
 
 /****** PLOT ******************************************************************/
 
-.axis-label {
+#main-plot-svg,
+#bottom-plot-svg,
+#secondary-plot-svg,
+#ternary-plot-svg,
+#text-plot-svg {
+  margin-left: 96px;
+  margin-top: 24px;
+  width: calc(100% - 96px - 12px);
+  height: calc(100% - 24px - 36px);
+}
+
+.x-axis-label {
   fill: black;
   text-anchor: middle;
-  font-size: small;
+  font-size: smaller;
+}
+
+.y-axis-label {
+  fill: black;
+  text-anchor: middle;
+  font-size: smaller;
 }
 
 .title-label {
   fill: black;
   text-anchor: middle;
+}
+
+.plot-grid-cell-background {
+  fill: var(--gray-a-8);
 }
