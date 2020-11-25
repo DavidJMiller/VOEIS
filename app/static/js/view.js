@@ -217,12 +217,7 @@ class View {
     // this.ternaryPlot.drawPlot(number, index);
     // this.textPlot.drawPlot(number, index);
 
-    if (number['num'] == 42) {
-      DBHandler.getSloanes(d => {
-        console.log(d);
-      });
-      DBHandler.getNumber('12', d => console.log(d));
-    }
+    
   }
 
   //#endregion

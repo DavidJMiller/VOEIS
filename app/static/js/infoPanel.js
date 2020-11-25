@@ -100,6 +100,6 @@ class InfoPanel {
         .ease(d3.easeSinOut)
         .duration(InfoPanel.FADE_IN_DURATION)
         .style('opacity', 1);
-    console.log('target', targetRect, '\n\nelem', elemRect);
+    //console.log('target', targetRect, '\n\nelem', elemRect);
   }
 }
