@@ -1,82 +1,156 @@
-/** W 11/18/20 */
+/**
+ * Represents and controls the main view element in our VOEIS webpage.
+ *
+ * VOEIS
+ * David Miller, Kevin Song, and Qianlang Chen
+ * A 11/21/20
+ */
 class View {
+  //#region STATIC MEMBERS /////////////////////////////////////////////////////
+
+  //#endregion
+
+  //#region CONSTRUCTOR ////////////////////////////////////////////////////////
+
   constructor() {
-    this.currView = 'global';
+    /* default view */
+    this.currView = 'local';
 
-    this.mainPlot = new Plot('main-plot-svg', 'scatter');
-    this.bottomPlot = new Plot('bottom-plot-svg', 'grid');
-    this.secondaryPlot = new Plot('secondary-plot-svg', 'scatter');
-    this.ternaryPlot = new Plot('ternary-plot-svg', 'scatter');
-    this.textPlot = new Plot('text-plot-svg', 'scatter');
+    /* plots for each view */
+    this.mainPlot = new Plot('main-plot-svg');
+    this.bottomPlot = new Plot('bottom-plot-svg');
+    this.secondaryPlot = new Plot('secondary-plot-svg');
+    this.ternaryPlot = new Plot('ternary-plot-svg');
+    this.textPlot = new Plot('text-plot-svg');
 
-    /* plot iterable */
-    this.plots = [
-      this.mainPlot, this.secondaryPlot, this.ternaryPlot, this.bottomPlot,
-      this.textPlot
-    ];
+    /**
+     * @type {Map<Plot, Object<string, {options: PlotOptions[], currIndex:
+     *     number}>} Defines which plot-options are allowed within each plot
+     */
+    this.plotOptions = new Map();
+    this.plotOptions.set(this.mainPlot, {
+      'local': {
+        'options': [
+          PlotOptions.SEQUENCE,
+          PlotOptions.GROWTH_RATE,
+          PlotOptions.RUNNING_SUM,
+        ],
+        'currIndex': 0,
+      },
+      'global': {
+        'options': [
+          PlotOptions.SLOANES_GAP,
+        ],
+        'currIndex': 0,
+      },
+      'fixed': {
+        'options': [
+          PlotOptions.NEIGHBORS,
+          PlotOptions.INDEX_COUNTS,
+        ],
+        'currIndex': 0,
+      },
+    });
+    this.plotOptions.set(this.bottomPlot, {
+      'local': {
+        'options': [
+          PlotOptions.GRID,
+        ],
+        'currIndex': 0,
+      },
+      'global': {
+        'options': [
+          PlotOptions.GRID,
+        ],
+        'currIndex': 0,
+      },
+      'fixed': {
+        'options': [
+          PlotOptions.INDEX_COUNTS,
+        ],
+        'currIndex': 0,
+      }
+    });
+    this.plotOptions.set(this.secondaryPlot, {
+      'local': {
+        'options': [
+          PlotOptions.SEQUENCE,
+          PlotOptions.GROWTH_RATE,
+          PlotOptions.RUNNING_SUM,
+        ],
+        'currIndex': 1,
+      },
+      'global': {
+        'options': [
+          PlotOptions.SLOANES_GAP,
+        ],
+        'currIndex': 0,
+      },
+      'fixed': {
+        'options': [
+          PlotOptions.NEIGHBORS,
+          PlotOptions.INDEX_COUNTS,
+        ],
+        'currIndex': 1,
+      },
+    });
+    this.plotOptions.set(this.bottomPlot, {
+      'local': {
+        'options': [
+          PlotOptions.GRID,
+        ],
+        'currIndex': 0,
+      },
+      'global': {
+        'options': [
+          PlotOptions.GRID,
+        ],
+        'currIndex': 0,
+      },
+      'fixed': {
+        'options': [
+          PlotOptions.INDEX_COUNTS,
+        ],
+        'currIndex': 0,
+      }
+    });
+    this.plotOptions.set(this.ternaryPlot, {
+      'local': {
+        'options': [
+          PlotOptions.SEQUENCE,
+          PlotOptions.GROWTH_RATE,
+          PlotOptions.RUNNING_SUM,
+        ],
+        'currIndex': 2,
+      },
+      'global': {
+        'options': [
+          PlotOptions.SLOANES_GAP,
+        ],
+        'currIndex': 0,
+      },
+      'fixed': {
+        'options': [
+          PlotOptions.NEIGHBORS,
+          PlotOptions.INDEX_COUNTS,
+        ],
+        'currIndex': 1,
+      },
+    });
+    this.plotOptions.set(this.textPlot, this.plotOptions.get(this.mainPlot));
 
-    /* set which stats are allowed within each view and plot */
-    this.plotStats = new Map();
-    this.plotStats.set(this.mainPlot, {
-      'local': ['Sequence Terms', 'Growth Rate'],
-      'global': ['Sloane\'s'],
-      'fixed': ['Neighbors', 'Index Count'],
-    });
-    this.plotStats.set(this.secondaryPlot, this.plotStats.get(this.mainPlot));
-    this.plotStats.set(this.ternaryPlot, this.plotStats.get(this.mainPlot));
-    this.plotStats.set(this.bottomPlot, {
-      'local': ['GH Squares'],
-      'global': ['Top vs Bottom Band'],
-      'fixed': ['Index Count'],
-    });
-    this.plotStats.set(this.textPlot, this.plotStats.get(this.mainPlot));
-
-    /* plot -> {local stat index, global stat index, fixed stat index}*/
-    this.plotIndices = new Map();
-    this.plotIndices.set(this.mainPlot, {
-      'local': 0,
-      'global': 0,
-      'fixed': 0,
-    });
-    this.plotIndices.set(this.secondaryPlot, {
-      'local': 0,
-      'global': 0,
-      'fixed': 0,
-    });
-    this.plotIndices.set(this.ternaryPlot, {
-      'local': 0,
-      'global': 0,
-      'fixed': 0,
-    });
-    this.plotIndices.set(this.bottomPlot, {
-      'local': 0,
-      'global': 0,
-      'fixed': 0,
-    });
-    this.plotIndices.set(this.textPlot, {
-      'local': 0,
-      'global': 0,
-      'fixed': 0,
-    });
-
-    this.plotFuncs = new Map();
-    this.plotFuncs.set(this.mainPlot, {
-      'local': [Functions.sequence, Functions.sequence],
-      'global': [Functions.sequence],
-      'fixed': [Functions.indexCount, Functions.indexCount],
-    });
-    this.plotFuncs.set(this.secondaryPlot, this.plotFuncs.get(this.mainPlot));
-    this.plotFuncs.set(this.ternaryPlot, this.plotFuncs.get(this.mainPlot));
-    this.plotFuncs.set(this.bottomPlot, {
-      'local': [Functions.sequence],
-      'global': [Functions.sequence],
-      'fixed': [Functions.indexCount],
-    });
-    this.plotFuncs.set(this.textPlot, this.plotFuncs.get(this.mainPlot));
+    /** @type {Set<Plot>} The plots in the view. */
+    this.plots = new Set(this.plotOptions.keys());
 
     /** @type {Map<number, object>} The current selections. */
     this.selections = new Map();
+
+    this.changeView(this.currView);
   }
+
+  //#endregion
+
+  //#region METHODS ////////////////////////////////////////////////////////////
 
   /**
    * Changes the view. This method is called when the user clicks on one of the
@@ -88,26 +162,17 @@ class View {
     this.currView = newView;
     this.selections.clear();
 
-    for (let plot of this.plots) {
-      plot.clearPlot();
-      let index = this.plotIndices.get(plot)[newView];
-      let menuItems = this.plotStats.get(plot)[newView];
-      plot.setMenuItems(index, menuItems);
+    for (let [plot, options] of this.plotOptions) {
+      plot.setOptions(
+          options[this.currView]['options'],
+          options[this.currView]['currIndex']);
     }
   }
 
-  /* plot is changing the plotted statistic to index */
-  changeStat(plot, index) {
-    this.plotIndices.get(plot)[this.currView] = index;
-    let plotFunc = this.plotFunc.get(plot)[this.currView][index];
-    for (let [i, selection] of this.selections)
-      plot.drawPlot(plotFunc(selection), i);
+  /* plot is changing the plotted statistics */
+  changeStat(plot, option) {
+    /* TODO */
   }
-
-  /* private func: update single plot */
-  // updatePlot(plot, plotData, index) {
-  //  plot.drawPlot(plotData, index);
-  //}
 
   /**
    * Views an OEIS sequence. This method is called when the user clicks on a
@@ -118,21 +183,17 @@ class View {
    *     or `false` if they just deselected it.
    */
   viewSequence(sequence, index) {
-    this.selections.set(index, sequence);
+    if (sequence)
+      this.selections.set(index, sequence);
+    else
+      this.selections.delete(index);
 
-    if (sequence == null) { /* deplotting */
-      for (let plot of this.plots) {
-        plot.drawPlot(null, index);
-      }
-    } else {
-      let plotData;
-      let plotIndex;
-      for (let plot of this.plots) {
-        plotIndex = this.plotIndices.get(plot)[this.currView];
-        plotData = this.plotFuncs.get(plot)[this.currView][plotIndex](sequence);
-        plot.drawPlot(plotData, index);
-      }
-    }
+    // for (let plot of this.plots) plot.drawPlot(sequence, index);
+    this.mainPlot.drawPlot(sequence, index);
+    this.bottomPlot.drawPlot(sequence, index);
+    this.secondaryPlot.drawPlot(sequence, index);
+    this.ternaryPlot.drawPlot(sequence, index);
+    // this.textPlot.drawPlot(sequence, index);
   }
 
   /**
@@ -144,71 +205,121 @@ class View {
    *     or `false` if they just deselected it.
    */
   viewNumber(number, index) {
-    this.selections.set(index, number);
+    if (number)
+      this.selections.set(index, number);
+    else
+      this.selections.delete(index);
 
-    if (number == null) { /* deplotting */
-      for (let plot of this.plots) {
-        plot.drawPlot(null, index);
-      }
-    } else {
-      let plotData;
-      let plotIndex;
-      for (let plot of this.plots) {
-        plotIndex = this.plotIndices.get(plot)[this.currView];
-        plotData = this.plotFuncs.get(plot)[this.currView][plotIndex](number);
-        plot.drawPlot(plotData, index);
-      }
+    // for (let plot of this.plots) plot.drawPlot(number, index);
+    this.mainPlot.drawPlot(number, index);
+    this.bottomPlot.drawPlot(number, index);
+    // this.secondaryPlot.drawPlot(number, index);
+    // this.ternaryPlot.drawPlot(number, index);
+    // this.textPlot.drawPlot(number, index);
+
+    if (number['num'] == 42) {
+      DBHandler.getSloanes(d => {
+        console.log(d);
+      });
+      DBHandler.getNumber('12', d => console.log(d));
     }
   }
+
+  //#endregion
 }
 
-/* functions used to pack data
-we get sequence jsons in the form
-    a_num: "AXXXXXX"
-    name: "..."
-    terms: [size n]
-and number jsons in the form
-    index_counts: {0:int, 1:int, ...}
-    neighbors: {-max_offset: {int: count}, ...}
-    num: int
-    total_count: int
-    total_num_sequences: int
-Then we send data to plots in the form
-    x: [size n]
-    y: [size n]
-    xExtent: [xMin, xMax]
-    yExtent: [yMin, ymax]
-    title: "..."
-    xLabel: "..."
-    yLabel: "..."
-*/
-class Functions {
-  static indexCount(number) {
-    let x = [], y = [];
-    for (let index in number['index_counts']) {
-      x.push(+index);
-      y.push(number['index_counts'][index]);
-    }
-    return {
-      'x': x,
-      'y': y,
-      'xExtent': [x[0], x[x.length - 1]],
-      'yExtent': d3.extent(y),
-      'title': 'Index Count',
-      'xLabel': 'Index',
-      'yLabel': 'Count',
-    };
-  }
+//#region HELPER CLASSES ///////////////////////////////////////////////////////
 
-  static sequence(sequence) {
-    return {
-      'x': Array(sequence.terms.length).fill().map((x, i) => i + 1),
-      'y': sequence.terms.map(x => x),
-      'xExtent': [0, sequence.terms.length],
-      'yExtent': d3.extent(sequence.terms),
-      'title': 'Sequence Terms',
-      'xLabel': 'Index',
-      'yLabel': 'Value'
-    };
-  }
+/**
+ * Provides calculator and plotting functions for each plot-option to use.
+ *
+ * Each static constant in this class represents a supported plot-option and
+ * should have the following attributes: `menuText`, `title`, `xLabel`,
+ * `yLabel`, `calculate`, `plotData`, and `plotAxes`.
+ */
+class PlotOptions {
+  //#region LOCAL //////////////////////////////////////////////////////////////
+
+  static SEQUENCE = new PlotOption(
+      'Sequence Terms',
+      'Sequence Terms',
+      'Index',
+      'Term',
+      Functions.sequence,
+      Functions.scatter,
+      Functions.scatterAxes,
+  );
+
+  static GRID = new PlotOption(
+      '',
+      'Last-Digit Distribution',
+      '',
+      'Last Digit',
+      Functions.sequence,
+      Functions.grid,
+      Functions.gridAxes,
+  );
+
+  static GROWTH_RATE = new PlotOption(
+      'Growth Rate',
+      'Growth Rate',
+      'Index',
+      'Growth Rate',
+      Functions.growthRate,
+      Functions.line,
+      Functions.scatterAxes,
+      true,
+  );
+
+  static RUNNING_SUM = new PlotOption(
+      'Running Sum',
+      'Running Sum',
+      'Index',
+      'Sum of First n Terms',
+      Functions.runningSum,
+      Functions.line,
+      Functions.scatterAxes,
+      true,
+  );
+
+  //#endregion
+
+  //#region GLOBAL /////////////////////////////////////////////////////////////
+
+  static SLOANES_GAP = new PlotOption(
+      '',
+      'Number of sequences each integer has appeared in',
+      'Number',
+      'Number of sequences',
+      null,
+      null,
+      null,
+  );
+
+  //#endregion
+
+  //#region FIXED //////////////////////////////////////////////////////////////
+
+  static NEIGHBORS = new PlotOption(
+      'Neighbors',
+      'Most Frequent Neighbors',
+      'Neighbor Distance',
+      'Neighbor',
+      Functions.neighbors,
+      Functions.scatter,
+      Functions.scatterAxes,
+  );
+
+  static INDEX_COUNTS = new PlotOption(
+      'Index Counts',
+      'Index Counts in all Sequences',
+      'Index',
+      'Occurrence Frequency',
+      Functions.indexCounts,
+      Functions.bar,
+      Functions.indexCountAxes,
+  );
+  //#endregion
 }
+
+//#endregion

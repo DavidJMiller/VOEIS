@@ -3,11 +3,12 @@ Provides functions to handle routes for our web application.
 
 VOEIS
 Qianlang Chen
-F 11/06/20
+T 11/24/20
 """
 
 from flask import jsonify, render_template, request
 from app import app
+import time
 
 from data import voeis_db
 
@@ -15,12 +16,13 @@ print("Loading database...")
 voeis_db.init()
 print("The database has been successfully loaded!")
 
+ALWAYS_RELOAD_APP_FILES = False
+
 
 @app.route("/")
 def root():
-    # return render_template("ajax_demo.html")
-    # return render_template("root.html")
-    return render_template("VOEIS.html")
+    update_time = f"?u={int(time.time())}" if ALWAYS_RELOAD_APP_FILES else ""
+    return render_template("VOEIS.html", update_time=update_time)
 
 
 @app.route("/get-number", methods=["POST"])
@@ -49,4 +51,4 @@ def search_sequence():
 
 @app.route("/get-sloanes", methods=["POST"])
 def get_sloanes():
-    return str(voeis_db.get_sloanes())
+    return jsonify(voeis_db.get_sloanes())

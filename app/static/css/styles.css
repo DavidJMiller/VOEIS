@@ -156,10 +156,44 @@ g[class^='col'] {
   opacity: 0.8333;
 }
 
+.text-only-axis path,
+.text-only-axis line {
+  fill: none;
+  stroke: none;
+}
+
 #main-wrapper {
   position: absolute;
   top: 0px;
   height: calc(100%);
+}
+
+/****** INFO PANEL ************************************************************/
+
+.info-panel {
+  position: absolute;
+  text-align: center;
+  width: fit-content;
+  height: fit-content;
+  background: #f4f4f4;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  padding-top: 8px !important;
+  padding-bottom: 4px !important;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 1728;
+  float: left;
+  font-size: small;
+}
+
+.info-panel h4 {
+  margin-bottom: 4px;
+}
+
+.info-panel span {
+  float: initial;
+  opacity: 1;
 }
 
 /****** SEARCH BAR ************************************************************/
@@ -335,21 +369,21 @@ g[class^='col'] {
 #ternary-plot-svg,
 #text-plot-svg {
   margin-left: 96px;
-  margin-top: 24px;
+  margin-top: 36px;
   width: calc(100% - 96px - 12px);
-  height: calc(100% - 24px - 36px);
+  height: calc(100% - 36px - 36px);
 }
 
 .x-axis-label {
   fill: black;
-  text-anchor: middle;
   font-size: smaller;
+  text-anchor: middle;
 }
 
 .y-axis-label {
   fill: black;
-  text-anchor: middle;
   font-size: smaller;
+  text-anchor: middle;
 }
 
 .title-label {
@@ -359,4 +393,14 @@ g[class^='col'] {
 
 .plot-grid-cell-background {
   fill: var(--gray-a-8);
+}
+
+.plot-grid-ellipsis-dot {
+  fill: var(--gray-a-8);
+  pointer-events: none;
+}
+
+.plot-grid-tick {
+  font-size: xx-small;
+  text-anchor: middle;
 }

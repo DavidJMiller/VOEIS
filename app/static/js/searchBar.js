@@ -1,6 +1,5 @@
 /**
- * Represents and controls the element of the search bar element in our VOEIS
- * webpage.
+ * Represents and controls the search bar element in our VOEIS webpage.
  *
  * VOEIS
  * David Miller, Kevin Song, and Qianlang Chen
@@ -32,7 +31,14 @@ class SearchBar {
     'A000396',
     'A002182',
     'A006370',
-    'A001057', // used to test some negative values in the grid plot
+    'A001057',
+    'A007318',
+    'A007319',
+    'A007314',
+    'A007315',
+    'A007316',
+    'A007317',
+    'A050503',
   ];
 
   /** The A-numbers of the sequences in each sequence-preset. */
@@ -345,8 +351,8 @@ class SearchBar {
 
     // notify the view
     this.view.changeView(newView);
-    let selections = newView == 'fixed' ? this.numberSelectionByIndex :
-                                          this.sequenceSelectionByIndex;
+    let selections = newView == 'fixed' ? this.numberSelectionByIndex
+                                        : this.sequenceSelectionByIndex;
     for (let i = 0; i < selections.length; i++) {
       let selection = selections[i];
       if (selection) {
@@ -363,8 +369,8 @@ class SearchBar {
     let query = this.searchBox.node().value.trim();
     if (!query) {
       this.invalidTooltip.html(
-          this.currView == 'fixed' ? 'Enter your favorite integer :)' :
-                                     'Enter some of your favorite integers :)');
+          this.currView == 'fixed' ? 'Enter your favorite integer :)'
+                                   : 'Enter some of your favorite integers :)');
       this.searchBox.classed('is-invalid', true);
       this.searchBox.node().focus();
 
@@ -439,8 +445,8 @@ class SearchBar {
     let elem = resItem.elem, isSelected = this.selections.has(resItem),
         toView = null, tarIndex = -1;
     if (isSelected) {  // deselect
-      let indexArray = this.currView == 'fixed' ? this.numberSelectionByIndex :
-                                                  this.sequenceSelectionByIndex;
+      let indexArray = this.currView == 'fixed' ? this.numberSelectionByIndex
+                                                : this.sequenceSelectionByIndex;
       tarIndex = this.selections.get(resItem);
 
       indexArray[tarIndex] = null;
@@ -448,8 +454,8 @@ class SearchBar {
 
       elem.classed('selected', false).style('background-color', '');
     } else {  // select
-      let indexArray = this.currView == 'fixed' ? this.numberSelectionByIndex :
-                                                  this.sequenceSelectionByIndex;
+      let indexArray = this.currView == 'fixed' ? this.numberSelectionByIndex
+                                                : this.sequenceSelectionByIndex;
       toView = resItem.rawData;
       tarIndex = indexArray.indexOf(null);  // assume always exists
 

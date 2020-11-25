@@ -1,115 +1,156 @@
-/** W 11/18/20 */
+/**
+ * Represents and controls a plot element in our VOEIS webpage.
+ *
+ * VOEIS
+ * David Miller, Kevin Song, and Qianlang Chen
+ * M 11/23/20
+ */
 class Plot {
+  //#region STATIC MEMBERS /////////////////////////////////////////////////////
+
   /** The extents to use (for both X and Y) when there is no data to plot. */
   static DEFAULT_EXTENTS = [0, 12];
 
-  /* main, bottom, secondary, ternary, text */
-  constructor(plotId, plotType) {
+  //#endregion
+
+  //#region CONSTRUCTOR ////////////////////////////////////////////////////////
+
+  /**
+   * Creates a new `Plot` instance.
+   * @param {string} plotId The ID of the SVG element in our webpage this plot
+   *     should control (without the leading `#` sign).
+   */
+  constructor(plotId) {
     /**
      * @private @type {Selection} A D3-selection containing an SVG for the plot.
      */
-    this.plot = d3.select('#' + plotId);
+    this.plotElem = d3.select('#' + plotId);
 
-    this.currPlotType = plotType;
+    /** @type {PlotOption} */
+    this.currOption = null;
 
     /**
-     * @private @type {Map<number, object>} The data currently displayed in this
-     *     plot, for each "color-index."
+     * @private @type {Map<number, Plottable>} The `Plottable` data currently
+     *     displayed in this plot, for each "color-index."
      */
     this.plottedData = new Map();
 
-    /** @private @type {object} The extents of the axes. */
-    this.extents = {
-      x: Plot.DEFAULT_EXTENTS.concat(),  // concat makes hard copies
-      y: Plot.DEFAULT_EXTENTS.concat(),
-    };
+    this.xExtent = Plot.DEFAULT_EXTENTS.concat();  // concat makes hard copies
+    this.yExtent = Plot.DEFAULT_EXTENTS.concat();
 
-    this.xLabel = 'Some X-Values';
+    this.xAxisElem = null;
+    this.yAxisElem = null;
+    this.xLabelElem = null;
+    this.yLabelElem = null;
+    this.titleElem = null;
 
-    this.yLabel = 'Some Y-Values';
+    this.initPlot();
 
-    this.title = 'Some Plot';
+    // redraw axes and other background elements when the size of browser window
+    // changes
+    window.addEventListener('resize', () => this.drawAxes());
+  }
 
-    this.xAxisElem = this.plot.append('svg')
+  //#endregion
+
+  //#region METHODS ////////////////////////////////////////////////////////////
+
+  /** @private Creates other background elements needed for this plot. */
+  initPlot() {
+    this.xAxisElem = this.plotElem.append('svg')
                          .attr('y', '100%')
                          .append('g')
                          .attr('id', 'plot-x-axis');
     this.yAxisElem =
-        this.plot.append('svg').append('g').attr('id', 'plot-y-axis');
-    this.xLabelElem = this.plot.append('text')
+        this.plotElem.append('svg').append('g').attr('id', 'plot-y-axis');
+    this.xLabelElem = this.plotElem.append('text')
                           .attr('id', 'plot-x-label-text')
                           .attr('class', 'x-axis-label');
-    this.yLabelElem = this.plot.append('text')
+    this.yLabelElem = this.plotElem.append('text')
                           .attr('id', 'plot-y-label-text')
-                          .attr('class', 'y-axis-label');
-    this.titleElem = this.plot.append('text')
+                          .attr('class', 'y-axis-label')
+                          .attr('transform', 'rotate(-90)');
+    this.titleElem = this.plotElem.append('text')
                          .attr('id', 'plot-title-text')
                          .attr('class', 'title-label');
-
-    let onWindowResize = () => {
-      Visualizations.PLOT_TYPES[this.currPlotType]['plotAxes'](
-          this.xLabel, this.yLabel, this.title, this.extents, this.plot);
-    };
-
-    window.addEventListener('resize', onWindowResize);
-    onWindowResize();  // force a resize now
   }
 
   /* get appropriate function and send it data to plot */
   drawPlot(data, index) {
-    let visFuncs = Visualizations.PLOT_TYPES[this.currPlotType];
-
-    if (data)
-      this.plottedData.set(index, data);
+    let plottable = data && this.currOption.calculate(data);
+    if (plottable)
+      this.plottedData.set(index, plottable);
     else
       this.plottedData.delete(index);
 
-    if (this.calculateExtents(data)) {
-      visFuncs['plotAxes'](
-          this.xLabel, this.yLabel, this.title, this.extents, this.plot);
+    if (this.calculateExtents(plottable)) {
+      // extents have changed; redraw axes
+      this.drawAxes();
+
+      // move previously-plotted data points
       for (let [i, plottedData] of this.plottedData) {
         if (i == index) continue;  // don't move the new data before drawing
-        visFuncs['plotData'](plottedData, this.extents, i, this.plot);
+        this.currOption.plotData(
+            this.plotElem, plottedData, i, this.xExtent, this.yExtent);
       }
     }
-    visFuncs['plotData'](data, this.extents, index, this.plot);
+    this.currOption.plotData(
+        this.plotElem, plottable, index, this.xExtent, this.yExtent);
   }
 
   /* remove drawn elements, but not axis */
   clearPlot() {
-    this.plot.selectAll('.plot-data-elem').remove();
+    this.plotElem.selectAll('.plot-data-elem').remove();
     this.plottedData.clear();
+    this.xExtent[0] = this.yExtent[0] = Plot.DEFAULT_EXTENTS[0];
+    this.xExtent[1] = this.yExtent[1] = Plot.DEFAULT_EXTENTS[1];
   }
 
   /* set plot-able stats for this plot */
-  setMenuItems(index, menuItems) {
-    /* TODO:
-      We are plotting the statistic menuItems[index]. Also let
-      dropdown have items in menuItems.
-    */
-    // GG: do this later after multiple selection and deletion are working
-    // correctly.
+  setOptions(options, defaultIndex) {
+    this.clearPlot();
+    this.currOption = options[defaultIndex];
+
+    /* TODO */
+
+    this.drawAxes();
+  }
+
+  /** @private */
+  drawAxes() {
+    if (!this.currOption) return;
+    this.currOption.plotAxes(
+        this.plotElem, this.currOption.plotTitle, this.currOption.plotXLabel,
+        this.currOption.plotYLabel, this.xExtent, this.yExtent);
+    if (this.currOption.plotDataOnResize) {
+      for (let [index, plottedData] of this.plottedData) {
+        this.currOption.plotData(
+            this.plotElem, plottedData, index, this.xExtent, this.yExtent);
+      }
+    }
   }
 
   /**
    * @private Finds the extreme X- and Y-values as the new extents.
+   * @param {Plottable} newData
    * @returns Whether the extents has changed, which would trigger a re-draw.
    */
   calculateExtents(newData) {
     let xMin, xMax, yMin, yMax;
-    if (newData && this.plottedData.size) {  // `newData` is the new selection
-      xMin = Math.min(this.extents['x'][0], newData['xExtent'][0]);
-      xMax = Math.max(this.extents['x'][1], newData['xExtent'][1]);
-      yMin = Math.min(this.extents['y'][0], newData['yExtent'][0]);
-      yMax = Math.max(this.extents['y'][1], newData['yExtent'][1]);
+    if (newData && this.plottedData.size > 1) {
+      // `newData` is the new selection
+      xMin = Math.min(this.xExtent[0], newData.xExtent[0]);
+      xMax = Math.max(this.xExtent[1], newData.xExtent[1]);
+      yMin = Math.min(this.yExtent[0], newData.yExtent[0]);
+      yMax = Math.max(this.yExtent[1], newData.yExtent[1]);
     } else {  // a deselection by the user
       xMin = Infinity, yMin = Infinity;
       xMax = -Infinity, yMax = -Infinity;
       for (let data of this.plottedData.values()) {
-        xMin = Math.min(xMin, data['xExtent'][0]);
-        xMax = Math.max(xMax, data['xExtent'][1]);
-        yMin = Math.min(yMin, data['yExtent'][0]);
-        yMax = Math.max(yMax, data['yExtent'][1]);
+        xMin = Math.min(xMin, data.xExtent[0]);
+        xMax = Math.max(xMax, data.xExtent[1]);
+        yMin = Math.min(yMin, data.yExtent[0]);
+        yMax = Math.max(yMax, data.yExtent[1]);
       }
       if (xMin == Infinity) {  // no data left
         xMin = yMin = Plot.DEFAULT_EXTENTS[0];
@@ -117,15 +158,123 @@ class Plot {
       }
     }
 
-    if (xMin == this.extents['x'][0] && xMax == this.extents['x'][1] &&
-        yMin == this.extents['y'][0] && yMax == this.extents['y'][1])
+    if (xMin == this.xExtent[0] && xMax == this.xExtent[1] &&
+        yMin == this.yExtent[0] && yMax == this.yExtent[1])
       return false;
 
-    this.extents['x'][0] = xMin;
-    this.extents['x'][1] = xMax;
-    this.extents['y'][0] = yMin;
-    this.extents['y'][1] = yMax;
+    this.xExtent[0] = xMin;
+    this.xExtent[1] = xMax;
+    this.yExtent[0] = yMin;
+    this.yExtent[1] = yMax;
 
     return true;
   }
+
+  //#endregion
 }
+
+//#region HELPER CLASSES ///////////////////////////////////////////////////////
+
+/**
+ * Represents an option of statistics to display for a sequence or number the
+ * user can choose to plot and view.
+ */
+class PlotOption {
+  /**
+   * Creates a new `PlotOption` instance.
+   * @param {string} menuTitle The text to display for this plot-option in the
+   *     option-selection menu.
+   * @param {string} plotTitle The text to display as the plot's title.
+   * @param {string} plotXLabel The text to display as the plot's X-label.
+   * @param {string} plotYLabel The text to display as the plot's Y-label.
+   * @param {function(object):Plottable} calculate The calculating function for
+   *     this plot-option to use, which convert a JSON object (the raw data of a
+   *     sequence or number) to a `Plottable` object.
+   * @param {function(Selection, Plottable, number[], number[], number)
+   * :void} plotData The data-plotting function for this plot-option to use,
+   *     which takes a `Plottable` object and plots it inside a given display
+   *     element.
+   * @param {function(Selection, PlotOption, number[], number[])} plotAxes The
+   *     axis-plotting function for this plot-option to use, which draws the
+   *     axes and/or background needed inside a given display element.
+   * @param {boolean} plotDataOnResize
+   */
+  constructor(
+      menuTitle, plotTitle, plotXLabel, plotYLabel, calculate, plotData,
+      plotAxes, plotDataOnResize = false) {
+    /**
+     * @type {string} menuText The text to display for this plot-option in the
+     *     option-selection menu.
+     */
+    this.menuTitle = menuTitle;
+
+    /**
+     * @type {string} The text to display as the plot's title.
+     */
+    this.plotTitle = plotTitle;
+
+    /**
+     * @type {string} The text to display as the plot's X-label.
+     */
+    this.plotXLabel = plotXLabel;
+
+    /**
+     * @type {string} The text to display as the plot's Y-label.
+     */
+    this.plotYLabel = plotYLabel;
+
+    /**
+     * @type {function(object):Plottable} The calculating function for
+     *     this plot-option to use, which convert a JSON object (the raw data of
+     *     a sequence or number) to a `Plottable` object.
+     */
+    this.calculate = calculate;
+
+    /**
+     * @type {function(Selection, Plottable, number, number[], number[]):void}
+     *     The data-plotting function for this plot-option to use, which takes a
+     *     `Plottable` object and plots it inside a given display element.
+     */
+    this.plotData = plotData;
+
+    /**
+     * @type {function(Selection, PlotOption, number[], number[])} The
+     *     axis-plotting function for this plot-option to use, which draws the
+     *     axes and/or background needed inside a given display element.
+     */
+    this.plotAxes = plotAxes;
+
+    this.plotDataOnResize = plotDataOnResize;
+  }
+}
+
+/** Represents and provides data ready to be plotted. */
+class Plottable {
+  /**
+   * Creates a new `Plottable` instance.
+   * @param {number[]} xExtent The extent of the X-values, in the form of `[min,
+   *     max]`.
+   * @param {number[]} yExtent The extent of the Y-values, in the form of `[min,
+   *     max]`.
+   * @param {number[]} x The actual X-values ready to be scaled and plotted.
+   * @param {number[]} y The actual Y-values ready to be scaled and plotted.
+   *     Must have the same length as `x`.
+   * @param {number[]} magnitudes The attached "magnitude" value for each data
+   *     point. Must have the same length as `x` or be `null`. Defaults to
+   *     `null`.
+   */
+  constructor(xExtent, yExtent, x, y, magnitudes = null) {
+    this.xExtent = xExtent;
+    this.yExtent = yExtent;
+    this.x = x;
+    this.y = y;
+    this.magnitudes = magnitudes;
+
+    if (y.length != x.length || magnitudes && magnitudes.length != x.length)
+      throw 'Lengths of data points do not match.';
+
+    this.length = x.length;
+  }
+}
+
+//#endregion
