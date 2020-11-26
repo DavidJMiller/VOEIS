@@ -4,7 +4,7 @@
  *
  * VOEIS
  * David Miller, Kevin Song, and Qianlang Chen
- * T 11/24/20
+ * W 11/25/20
  */
 class Functions {
   //#region STAT-CALCULATING FUNCTIONS /////////////////////////////////////////
@@ -13,16 +13,26 @@ class Functions {
 
   static growthRate(sequence) {
     let x = [], y = [], yMin = Infinity, yMax = -Infinity;
-    for (let i = 0; i < sequence['terms'].length - 1; i++) {
-      x[i] = i;
-      y[i] = sequence['terms'][i] == 0
-          ? 0
-          : sequence['terms'][i + 1] / sequence['terms'][i];
-      if (y[i] < yMin) yMin = y[i];
-      if (y[i] > yMax) yMax = y[i];
+    for (let i = 1; i < sequence['terms'].length; i++) {
+      x.push(i);
+      y.push(sequence['terms'][i] / (sequence['terms'][i - 1] || 1));
+      yMin = Math.min(yMin, y[i - 1]);
+      yMax = Math.max(yMax, y[i - 1]);
     }
 
-    return new Plottable([0, x.length], [yMin, yMax], x, y);
+    return new Plottable(sequence, [1, x.length], [yMin, yMax], x, y);
+  }
+
+  static runningSum(sequence) {
+    let x = [0], y = [0], yMin = 0, yMax = 0;
+    for (let i = 1; i <= sequence['terms'].length; i++) {
+      x.push(i);
+      y.push(sequence['terms'][i - 1] + y[i - 1]);
+      yMin = Math.min(yMin, y[i]);
+      yMax = Math.max(yMax, y[i]);
+    }
+
+    return new Plottable(sequence, [0, x.length - 1], [yMin, yMax], x, y);
   }
 
   static sequence(sequence) {
@@ -33,21 +43,30 @@ class Functions {
       yMax = Math.max(yMax, y[i]);
     }
 
-    return new Plottable([0, x.length], [yMin, yMax], x, y);
+    return new Plottable(sequence, [0, x.length], [yMin, yMax], x, y);
   }
 
-  static runningSum(sequence) {
-    let x = [], y = sequence['terms'].concat(), yMin = Infinity,
-        yMax = -Infinity;
-    x.push(1);
-    for (let i = 1; i < y.length; i++) {
-      x[i] = i + 1;
-      y[i] = y[i] + y[i - 1];
-      if (y[i] < yMin) yMin = y[i];
-      if (y[i] > yMax) yMax = y[i];
+  static SLOANES_GAP_MIN_NUM = 0;
+
+  static SLOANES_GAP_MAX_NUM = 1e4;
+
+  static sloanesGap(numFreqs) {
+    const xMin = Functions.SLOANES_GAP_MIN_NUM,
+          xMax = Functions.SLOANES_GAP_MAX_NUM;
+    let x = [], y = [], yMax = -Infinity;
+    for (let num in numFreqs) {
+      num = +num;
+      if (num < xMin || num > xMax) continue;
+      const freq = Math.log10(+numFreqs[num]);
+
+      x.push(num);
+      y.push(freq);
+      yMax = Math.max(yMax, freq);
+
+      if (x.length > xMax - xMin) break;
     }
 
-    return new Plottable([1, x.length], [yMin, yMax], x, y);
+    return new Plottable(numFreqs, [xMin, xMax], [0, yMax], x, y);
   }
 
   //#endregion
@@ -71,7 +90,7 @@ class Functions {
       }
     }
 
-    return new Plottable([0, x.length], [0, yMax], x, y);
+    return new Plottable(number, [0, x.length], [0, yMax], x, y);
   }
 
   static neighbors(number) {
@@ -94,7 +113,8 @@ class Functions {
     }
     magnitudes[0] = magnitudeMax * 2;
 
-    return new Plottable([xMin - 1, xMax + 1], [yMin, yMax], x, y, magnitudes);
+    return new Plottable(
+        number, [xMin - 1, xMax + 1], [yMin, yMax], x, y, magnitudes);
   }
 
   //#endregion
@@ -103,7 +123,7 @@ class Functions {
 
   //#region PLOTTING FUNCTIONS /////////////////////////////////////////////////
 
-  //#region CONSTANTS ----------------------------------------------------------
+  //#region CONSTANTS ---------------------------------------------------------
 
   /** The total duration of a transition in milliseconds. */
   static TOTAL_TRANSITION_DURATION = 2083;
@@ -113,13 +133,24 @@ class Functions {
 
   //#endregion
 
-  //#region BAR ----------------------------------------------------------------
+  //#region BAR ---------------------------------------------------------------
 
-  static bar(elem, data, index, xExtent, _yExtent) {
+  static BAR_MARGIN = 0.25;
+
+  static bar(elem, data, index, xExtent, _yExtent, showInfo) {
+    /** @type {Map<number, Map<number, Plottable>>>} */
+    let metadata = elem.datum();
+    if (!metadata) elem.datum(metadata = new Map());
+
     let wrapper = elem.select('#plot-data-wrapper-' + index);
 
     if (!data) {  // data is null: user deselected, remove elements
-      wrapper.selectAll('rect')
+      for (let xs of metadata.values()) xs.delete(index);
+
+      wrapper.classed('active', false)
+          .selectAll('.plot-bar-bar-clickable')
+          .remove();
+      wrapper.selectAll('.plot-bar-bar')
           .transition('fade')
           .ease(d3.easeSinIn)
           .duration(Functions.TRANSITION_DURATION)
@@ -131,11 +162,19 @@ class Functions {
     }
 
     const xScale = d3.scaleLinear().domain(xExtent).range([0, 100]),
-          yScale = d3.scaleLinear().domain(data.yExtent).range([0, 100]);
-    const width = 0.75 * (100 / (xExtent[1] - xExtent[0] + 1));
+          yScale = d3.scaleLinear().domain(data.yExtent).range([0, 100]),
+          fullWidth = 100 / (xExtent[1] - xExtent[0] + 1),
+          width = (1 - Functions.BAR_MARGIN) *
+        (100 / (xExtent[1] - xExtent[0] + 1));
 
-    if (!wrapper.empty()) {  // extent has been changed: move the elements
-      wrapper.selectAll('rect')
+    if (!wrapper.empty() && wrapper.classed('active')) {
+      // extent has been changed: move the elements
+      wrapper.selectAll('.plot-bar-bar-clickable')
+          .attr('x', d => xScale(d) - fullWidth / 2 + '%')
+          .attr('y', '0%')
+          .attr('width', fullWidth + '%')
+          .attr('height', '100%');
+      wrapper.selectAll('.plot-bar-bar')
           .transition('move')
           .ease(d3.easeSinOut)
           .duration(Functions.TRANSITION_DURATION)
@@ -147,18 +186,25 @@ class Functions {
       return;
     }
 
+    // update metadata
+    for (let x of data.x) {
+      if (!metadata.has(x)) metadata.set(x, new Map());
+      metadata.get(x).set(index, data);
+    }
+
     // draw the new ones
     const fillColor = `hsla(${Util.generateColor(index)}, 0.3333)`,
           strokeColor = `hsla(${Util.generateColor(index)}, 0.6667)`;
 
     wrapper = elem.append('g')
-                  .attr('class', 'plot-data-elem')
+                  .attr('class', 'plot-data-elem active')
                   .attr('id', 'plot-data-wrapper-' + index);
 
-    wrapper.selectAll('rect')
-        .data(data['x'])
-        .enter()
-        .append('rect')
+    wrapper.selectAll('.plot-bar-bar')
+        .data(data.x)
+        .join('rect')
+        .attr('class', 'plot-bar-bar')
+        .attr('id', (_d, i) => 'plot-bar-bar-' + i)
         .attr('x', d => xScale(d) - width / 2 + '%')
         .attr('y', '100%')
         .attr('height', '0%')
@@ -174,10 +220,44 @@ class Functions {
                 i * Functions.TOTAL_TRANSITION_DURATION / (data.length || 1))
         .duration(Functions.TRANSITION_DURATION * 2)
         .attr('y', (_d, i) => (100 - yScale(data.y[i])) + '%')
-        .attr('height', (_d, i) => yScale(data.y[i]) + '%')
+        .attr('height', (_d, i) => yScale(data.y[i]) + '%');
+
+    // draw clickable areas
+    wrapper.selectAll('.plot-bar-bar-clickable')
+        .data(data.x)
+        .join('rect')
+        .attr('class', 'plot-bar-bar-clickable')
+        .attr('id', (_d, i) => 'plot-bar-bar-clickable-' + i)
+        .style('opacity', 0)
+        .attr('x', d => xScale(d) - fullWidth / 2 + '%')
+        .attr('y', '0%')
+        .attr('width', fullWidth + '%')
+        .attr('height', '100%')
+        .on('mouseover',
+            e => {
+              let target = d3.select(e.currentTarget);
+              const i =
+                  +target.attr('id').substr('plot-bar-bar-clickable-'.length);
+
+              let info =
+                  Array.from(metadata.get(data.x[i])).map(x => x.concat(i));
+              if (showInfo(info)) {
+                let tallest = null, tallestHeight = -1;
+                elem.selectAll('#plot-bar-bar-' + i).each((_d, i, a) => {
+                  let curr = d3.select(a[i]),
+                      currHeight = +curr.attr('height').slice(0, -1);
+                  if (currHeight > tallestHeight) {
+                    tallestHeight = currHeight;
+                    tallest = curr;
+                  }
+                });
+                InfoPanel.show(tallest);
+              }
+            })
+        .on('mouseout', () => InfoPanel.hide());
   }
 
-  static indexCountAxes(elem, title, xLabel, yLabel, xExtent, yExtent) {
+  static barAxesIndexCounts(elem, title, xLabel, yLabel, xExtent, yExtent) {
     Functions.scatterAxes(elem, title, xLabel, yLabel, xExtent, yExtent)
     elem.select('#plot-y-label-text').html('');
     elem.select('#plot-y-axis').html('');
@@ -191,7 +271,7 @@ class Functions {
   static GRID_DEFAULT_BASE = 10;
 
   /** The number of columns in the grid plot. */
-  static GRID_NUM_COLS = 80;
+  static GRID_NUM_COLS = 40;
 
   /**
    * The maximum number of empty columns kept in the grid before it collapses
@@ -224,10 +304,10 @@ class Functions {
     let wrapper = elem.select('#plot-data-wrapper-0');
     // use `wrapper.datum()` to store the plot's metadata
     /**
-     * @type {[number, Map<number, number[]>, Map<number, Map<number,
-     *     number[]>>]}
+     * @type {[number, Map<number, number[]>, Map<number, string>, Map<number,
+     *     Map<number, number[]>>]}
      */
-    let [base, sequences, cells] = wrapper.datum();
+    let [base, sequences, sequenceData, cells] = wrapper.datum();
 
     // update the cells
     //
@@ -239,6 +319,7 @@ class Functions {
           cells.delete(num);
       }
       sequences.delete(index);
+      sequenceData.delete(index);
     } else {
       // handle movement: nothing to handle for this particular vis
       if (sequences.has(index)) return;
@@ -246,6 +327,7 @@ class Functions {
       // handle new selection: add this index to plotted numbers; numbers in the
       // sequences are given as the Y-values
       sequences.set(index, data.y);
+      sequenceData.set(index, data.rawData);
       for (let i = 0; i < data.y.length; i++) {
         let num = data.y[i];
         if (!cells.has(num)) cells.set(num, new Map());
@@ -347,7 +429,7 @@ class Functions {
     // selection; multiple occurrences of the same number within the same
     // sequence would be handled by having stacked rects with the same color
     let contents =
-        Functions.gridCells(wrapper, base, cellData)
+        Functions.gridCells(wrapper, base, cellData, sequenceData)
             .selectAll('.plot-grid-cell-contents.active')
             .data(
                 /**
@@ -408,9 +490,8 @@ class Functions {
         .filter(d => d[0] == index)  // new selections
         .transition()
         .delay(
-            d => (Functions.TOTAL_TRANSITION_DURATION -
-                  Functions.TRANSITION_DURATION) *
-                d[1] / (sequences.get(d[0]).length || 1))
+            d => Functions.TOTAL_TRANSITION_DURATION * d[1] /
+                (sequences.get(d[0]).length || 1))
         .ease(d3.easeElasticOut)
         .duration(Functions.TRANSITION_DURATION * 2)
         .attr('x', '0%')
@@ -430,11 +511,30 @@ class Functions {
   }
 
   static gridAxes(elem, title, _xLabel, yLabel, _xExtent, _yExtent) {
+    // draw background (all the empty cells, if needed)
+    let wrapper = elem.select('#plot-data-wrapper-0'), base;
+    if (wrapper.empty()) {
+      base = Functions.GRID_DEFAULT_BASE;
+      wrapper = elem.append('g')
+                    .attr('class', 'plot-data-elem')
+                    .attr('id', 'plot-data-wrapper-0')
+                    // create metadata:
+                    // [base, sequences, sequenceData, cells]
+                    .datum([base, new Map(), new Map(), new Map()]);
+
+      Functions.gridCells(
+          wrapper, base, new Array(base * Functions.GRID_NUM_COLS), null);
+    } else {
+      base = wrapper.datum()[0];
+    }
+
     // draw labels
     const plotWidth = elem.property('clientWidth'),
           plotHeight = elem.property('clientHeight');
     let tf = `translate(${plotWidth / 2}, -20)`;
-    elem.select('#plot-title-text').attr('transform', tf).text(title);
+    elem.select('#plot-title-text')
+        .attr('transform', tf)
+        .text(title.split('{base}').join(base));
 
     tf = `translate(-30, ${plotHeight / 2})`;
     elem.select('#plot-y-label-text')
@@ -444,21 +544,6 @@ class Functions {
     // clear unneeded labels
     elem.select('#plot-x-label-text').html('');
     elem.select('#plot-x-axis').html('');
-
-    // draw background (all the empty cells, if needed)
-    let wrapper = elem.select('#plot-data-wrapper-0')
-    if (!wrapper.empty()) return;
-
-    const base = Functions.GRID_DEFAULT_BASE;
-    wrapper = elem.append('g')
-                  .attr('class', 'plot-data-elem')
-                  .attr('id', 'plot-data-wrapper-0')
-                  // create metadata:
-                  // [base, sequences, cells]
-                  .datum([base, new Map(), new Map()]);
-
-    Functions.gridCells(
-        wrapper, base, new Array(base * Functions.GRID_NUM_COLS));
   }
 
   /**
@@ -467,8 +552,9 @@ class Functions {
    * @param {Selection} wrapper
    * @param {number} base
    * @param {*[]} data
+   * @param {Map<number, string>} sequenceData
    */
-  static gridCells(wrapper, base, data) {
+  static gridCells(wrapper, base, data, sequenceData) {
     // create scales and calculate cell dimensions
     const xScale =
         d3.scaleLinear().domain([0, Functions.GRID_NUM_COLS]).range([0, 100]);
@@ -496,10 +582,10 @@ class Functions {
 
     // draw cells' "clickable areas" (which ignore the margin)
     const invMargin = margin / (1 - 2 * margin);
-    cells.selectAll('.plot-grid-cell-clickable-area')
+    cells.selectAll('.plot-grid-cell-clickable')
         .data([true])
         .join('rect')
-        .attr('class', 'plot-grid-cell-clickable-area')
+        .attr('class', 'plot-grid-cell-clickable')
         .style('opacity', 0)
         .attr('x', -invMargin * 100 + '%')
         .attr('y', -invMargin * 100 + '%')
@@ -621,18 +707,21 @@ class Functions {
       // show the info about current number
       InfoPanel.header(d[0]);
       for (let [index, occurrences] of d[1]) {
-        InfoPanel.text(`In selected sequence ${index + 1}: `)
+        InfoPanel.text('Appeared ')
             .text(
                 occurrences.length, `hsl(${Util.generateColor(index, 0.5)})`,
                 true)
-            .text(' time' + (occurrences.length > 1 ? 's' : ''))
+            .text(` time${occurrences.length > 1 ? 's' : ''} in sequence `)
+            .text(
+                sequenceData.get(index)['a_num'],
+                `hsl(${Util.generateColor(index, 0.5)})`, true)
             .newline();
       }
       InfoPanel.show(target);
     });
     cells.on('mouseout', (e, d) => {
       let target = d3.select(e.currentTarget);
-      const i = target.attr('id').substr('plot-grid-cell-'.length);
+      const i = +target.attr('id').substr('plot-grid-cell-'.length);
 
       // hide the corresponding x-tick and y-tick
       wrapper.selectAll('.plot-grid-tick.y')
@@ -651,14 +740,23 @@ class Functions {
 
   //#region LINE ---------------------------------------------------------------
 
-  static line(elem, data, index, xExtent, yExtent) {
+  static LINE_NODE_RADIUS = 6;
+
+  static line(elem, data, index, xExtent, yExtent, showInfo) {
+    /** @type {Map<number, Map<number, Plottable>>>} */
+    let metadata = elem.datum();
+    if (!metadata) elem.datum(metadata = new Map());
+
     let wrapper = elem.select('#plot-data-wrapper-' + index);
 
     const plotWidth = elem.node().clientWidth,
           plotHeight = elem.node().clientHeight;
 
     if (!data) {  // data is null: user deselected, remove elements
-      wrapper.style('opacity', 1)
+      for (let xs of metadata.values()) xs.delete(index);
+
+      wrapper.classed('active', false)
+          .style('opacity', 1)
           .transition('fade')
           .ease(d3.easeSinIn)
           .duration(Functions.TRANSITION_DURATION)
@@ -674,43 +772,100 @@ class Functions {
     const line = d3.line()
                      .x((_d, i) => xScale(data.x[i]))
                      .y((_d, i) => yScale(data.y[i]))
-                     .curve(d3.curveLinear)
+                     .curve(d3.curveLinear);
 
-    if (!wrapper.empty()) {  // extent has been changed: move the elements
+    if (!wrapper.empty() && wrapper.classed('active')) {
+      // extent has been changed: move the elements
       wrapper.selectAll('path')
           .transition('move')
           .ease(d3.easeSinOut)
           .duration(Functions.TRANSITION_DURATION)
           .attr('d', line);
+      wrapper.selectAll('.plot-line-bar-clickable')
+          .attr('x', d => xScale(d - 0.5))
+          .attr('width', xScale(1) - xScale(0))
+          .attr('height', plotHeight);
+      wrapper.selectAll('.plot-line-node')
+          .attr('cx', d => xScale(d))
+          .attr('cy', (_d, i) => yScale(data.y[i]));
 
       return;
+    }
+
+    // update metadata
+    for (let x of data.x) {
+      if (!metadata.has(x)) metadata.set(x, new Map());
+      metadata.get(x).set(index, data);
     }
 
     // draw the new ones
     const strokeColor = `hsla(${Util.generateColor(index)}, 0.6667)`;
 
     wrapper = elem.append('g')
-                  .attr('class', 'plot-data-elem')
+                  .attr('class', 'plot-data-elem active')
                   .attr('id', 'plot-data-wrapper-' + index);
 
     let path = wrapper.selectAll('path')
                    .data([data])
-                   .enter()
-                   .append('path')
+                   .join('path')
                    .attr('d', line)
                    .style('fill', 'none')
                    .style('stroke', strokeColor)
                    .style('stroke-width', '2px')
-                   .style('z-order', '1728')
-
-    let totalLength = path.node().getTotalLength();
-
+                   .style('z-order', '1728');
+    const totalLength = path.node().getTotalLength();
     path.attr('stroke-dasharray', totalLength + ' ' + totalLength)
         .attr('stroke-dashoffset', totalLength)
-        .transition()
-        .ease(d3.easeSinOut)
+        .transition('fade')
+        .ease(d3.easeLinear)
         .duration(Functions.TOTAL_TRANSITION_DURATION)
-        .attr('stroke-dashoffset', 0)
+        .attr('stroke-dashoffset', 0);
+
+    // assuming that the data is continuous i.e. d[i+1] = d[i]+1
+    wrapper.selectAll('.plot-line-node')
+        .data(data.x)
+        .join('circle')
+        .attr('class', 'plot-line-node')
+        .attr('id', (_d, i) => 'plot-line-node-' + i)
+        .style('fill', strokeColor)
+        .attr('cx', d => xScale(d))
+        .attr('cy', (_d, i) => yScale(data.y[i]))
+        .attr('r', 0);
+    wrapper.selectAll('.plot-line-bar-clickable')
+        .data(data.x)
+        .join('rect')
+        .attr('class', 'plot-line-bar-clickable')
+        .attr('id', (_d, i) => 'plot-line-bar-clickable-' + i)
+        .style('opacity', 0)
+        .attr('x', d => xScale(d - 0.5))
+        .attr('y', 0)
+        .attr('width', xScale(1) - xScale(0))
+        .attr('height', plotHeight)
+        .on('mouseover',
+            e => {
+              let target = d3.select(e.currentTarget);
+              const i =
+                  +target.attr('id').substr('plot-line-bar-clickable-'.length);
+
+              let node = elem.selectAll('#plot-line-node-' + i);
+              node.attr('r', Functions.LINE_NODE_RADIUS);
+
+              let info =
+                  Array.from(metadata.get(data.x[i])).map(x => x.concat(i));
+              if (showInfo(info)) InfoPanel.show(node);
+            })
+        .on('mouseout', e => {
+          InfoPanel.hide();
+
+          const i = +d3.select(e.currentTarget)
+                         .attr('id')
+                         .substr('plot-line-bar-clickable-'.length);
+          elem.selectAll('#plot-line-node-' + i)
+              .transition('fade')
+              .ease(d3.easeSinIn)
+              .duration(Functions.TRANSITION_DURATION / 3)
+              .attr('r', 0);
+        });
   }
 
   //#endregion
@@ -723,17 +878,17 @@ class Functions {
    */
   static SCATTER_MAX_RADIUS = 12;
 
-  /**
-   * @param {Selection} elem
-   * @param {Plottable} data
-   * @param {number} index
-   * @param {number[]} xExtent
-   * @param {number[]} yExtent
-   */
-  static scatter(elem, data, index, xExtent, yExtent) {
+  static scatter(elem, data, index, xExtent, yExtent, showInfo) {
+    /** @type {Map<number, Map<number, Map<number, Plottable>>} */
+    let metadata = elem.datum();
+    if (!metadata) elem.datum(metadata = new Map());
+
     let wrapper = elem.select('#plot-data-wrapper-' + index);
 
     if (!data) {  // data is null: user deselected, remove elements
+      for (let xs of metadata.values())
+        for (let ys of xs.values()) ys.delete(index);
+
       wrapper.classed('active', false)
           .selectAll('circle')
           .transition('fade')
@@ -767,20 +922,28 @@ class Functions {
       return;
     }
 
+    // update metadata
+    for (let x of data.x) {
+      for (let y of data.y) {
+        if (!metadata.has(x)) metadata.set(x, new Map());
+        if (!metadata.get(x).has(y)) metadata.get(x).set(y, new Map());
+        metadata.get(x).get(y).set(index, data);
+      }
+    }
+
     // draw the new ones
     const fillColor = `hsla(${Util.generateColor(index)}, 0.3333)`,
           strokeColor = `hsla(${Util.generateColor(index)}, 0.6667)`;
 
     wrapper = elem.append('g')
-                  .attr('class', 'plot-data-elem active')
+                  .attr('class', 'plot-data-elem plot-data-wrapper active')
                   .attr('id', 'plot-data-wrapper-' + index)
-                  .lower();  // in case there's another wrapper "dying", we want
-                             // to select the first wrapper in the future
+                  .datum(metadata);
 
     wrapper.selectAll('circle')
         .data(data['x'])
-        .enter()
-        .append('circle')
+        .join('circle')
+        .attr('id', (_d, i) => 'plot-scatter-dot-' + i)
         .attr('cx', d => xScale(d) + '%')
         .attr('cy', (_d, i) => yScale(data.y[i]) + '%')
         .attr('r', 0)
@@ -788,13 +951,22 @@ class Functions {
         .style('stroke', strokeColor)
         .style('stroke-width', '1px')
         .style('z-order', '1728')
+        .on('mouseover',
+            (e, d) => {
+              let target = d3.select(e.currentTarget);
+              const i = +target.attr('id').substr('plot-scatter-dot-'.length);
+
+              let info =
+                  Array.from(metadata.get(data.x[i]).get(data.y[i]).entries())
+                      .map(x => x.concat(i));
+              if (showInfo(info)) InfoPanel.show(target);
+            })
+        .on('mouseout', () => InfoPanel.hide())
         .transition('fade')
         .ease(d3.easeElasticOut)
         .delay(
-            (_d, i) => i *
-                (Functions.TOTAL_TRANSITION_DURATION -
-                 Functions.TRANSITION_DURATION) /
-                (data.length || 1))
+            (_d, i) =>
+                i * Functions.TOTAL_TRANSITION_DURATION / (data.length || 1))
         .duration(Functions.TRANSITION_DURATION * 2)
         .attr('r', (_d, i) => rScale(data.magnitudes ? data.magnitudes[i] : 1));
   }
@@ -828,10 +1000,9 @@ class Functions {
     let tf = `translate(${plotWidth / 2}, ${plotHeight + 32})`;
     elem.select('#plot-x-label-text').attr('transform', tf).text(xLabel);
 
-    const maxExtent =
-        Math.abs(yExtent[0]) > Math.abs(yExtent[1]) ? yExtent[0] : yExtent[1];
-    tf = `translate(${- 18 - maxExtent.toString().length * 6}, ${
-        plotHeight / 2})`;
+    const tickWidth =
+        Math.max(...yExtent.map(x => d3.format(',.2r')(x).length)) * 6;
+    tf = `translate(${- 9 - tickWidth}, ${plotHeight / 2})`;
     let yLabelElem = elem.select('#plot-y-label-text');
     yLabelElem.text(yLabel);
     yLabelElem.transition('move')

@@ -61,6 +61,7 @@
   --gray-a-25: rgba(108, 117, 125, 0.25);
   --gray-a-42: rgba(108, 117, 125, 0.4167);
   --red-a-42: rgba(220, 53, 69, 0.4167);
+  --back-button-height: 0px;
   --preset-list-height: 144px;
 }
 
@@ -70,8 +71,10 @@
 
 html,
 body {
+  width: calc(100%);
   height: calc(100%);
   overflow-x: hidden;
+  position: relative;
 }
 
 button {
@@ -174,6 +177,7 @@ g[class^='col'] {
   position: absolute;
   text-align: center;
   width: fit-content;
+  max-width: 432px;
   height: fit-content;
   background: #f4f4f4;
   padding-left: 16px !important;
@@ -187,7 +191,7 @@ g[class^='col'] {
   font-size: small;
 }
 
-.info-panel h4 {
+.info-panel h5 {
   margin-bottom: 4px;
 }
 
@@ -196,10 +200,15 @@ g[class^='col'] {
   opacity: 1;
 }
 
+.info-panel em {
+  font-size: xx-small;
+  font-style: normal;
+}
+
 /****** SEARCH BAR ************************************************************/
 
 #search-bar {
-  height: calc(100% - var(--preset-list-height));
+  height: calc(100% - var(--back-button-height) - var(--preset-list-height));
 }
 
 #search-bar-title {
@@ -281,6 +290,18 @@ g[class^='col'] {
   text-align: center;
   margin-top: 36px;
   display: none;
+  margin-bottom: 24px;
+}
+
+#search-bar-back-button {
+  text-align: left;
+  margin-bottom: -12px;
+  display: none;
+  background-color: var(--gray-a-8);
+}
+
+#search-bar-back-button:hover {
+  background-color: var(--gray);
 }
 
 #search-bar-result-list {
@@ -354,6 +375,9 @@ g[class^='col'] {
 #preset-list-title {
   opacity: 0.5;
   font-style: italic;
+  height: 28px;
+  white-space: nowrap;
+  overflow-x: hidden;
 }
 
 #preset-list-contents button {

@@ -3,7 +3,7 @@
  *
  * VOEIS
  * David Miller, Kevin Song, and Qianlang Chen
- * M 11/23/20
+ * W 11/25/20
  */
 class Plot {
   //#region STATIC MEMBERS /////////////////////////////////////////////////////
@@ -77,30 +77,34 @@ class Plot {
 
   /* get appropriate function and send it data to plot */
   drawPlot(data, index) {
-    let plottable = data && this.currOption.calculate(data);
-    if (plottable)
-      this.plottedData.set(index, plottable);
+    let currPlottable = data && this.currOption.calculate(data);
+
+    if (currPlottable)
+      this.plottedData.set(index, currPlottable);
     else
       this.plottedData.delete(index);
 
-    if (this.calculateExtents(plottable)) {
+    if (this.calculateExtents(currPlottable)) {
       // extents have changed; redraw axes
       this.drawAxes();
 
       // move previously-plotted data points
       for (let [i, plottedData] of this.plottedData) {
-        if (i == index) continue;  // don't move the new data before drawing
+        if (i == index) continue;
         this.currOption.plotData(
-            this.plotElem, plottedData, i, this.xExtent, this.yExtent);
+            this.plotElem, plottedData, i, this.xExtent, this.yExtent,
+            this.currOption.showInfo);
       }
     }
     this.currOption.plotData(
-        this.plotElem, plottable, index, this.xExtent, this.yExtent);
+        this.plotElem, currPlottable, index, this.xExtent, this.yExtent,
+        this.currOption.showInfo);
   }
 
   /* remove drawn elements, but not axis */
   clearPlot() {
     this.plotElem.selectAll('.plot-data-elem').remove();
+    this.plotElem.datum(undefined);
     this.plottedData.clear();
     this.xExtent[0] = this.yExtent[0] = Plot.DEFAULT_EXTENTS[0];
     this.xExtent[1] = this.yExtent[1] = Plot.DEFAULT_EXTENTS[1];
@@ -125,7 +129,8 @@ class Plot {
     if (this.currOption.plotDataOnResize) {
       for (let [index, plottedData] of this.plottedData) {
         this.currOption.plotData(
-            this.plotElem, plottedData, index, this.xExtent, this.yExtent);
+            this.plotElem, plottedData, index, this.xExtent, this.yExtent,
+            this.currOption.showInfo);
       }
     }
   }
@@ -190,18 +195,24 @@ class PlotOption {
    * @param {function(object):Plottable} calculate The calculating function for
    *     this plot-option to use, which convert a JSON object (the raw data of a
    *     sequence or number) to a `Plottable` object.
-   * @param {function(Selection, Plottable, number[], number[], number)
-   * :void} plotData The data-plotting function for this plot-option to use,
-   *     which takes a `Plottable` object and plots it inside a given display
-   *     element.
-   * @param {function(Selection, PlotOption, number[], number[])} plotAxes The
-   *     axis-plotting function for this plot-option to use, which draws the
+   * @param {function(Selection, Plottable, number[], number[], number,
+   *     function):void} plotData The data-plotting function for this
+   *     plot-option to use, which takes a `Plottable` object and plots it
+   *     inside a given display element.
+   * @param {function(Selection, PlotOption, number[], number[]):void} plotAxes
+   *     The axis-plotting function for this plot-option to use, which draws the
    *     axes and/or background needed inside a given display element.
-   * @param {boolean} plotDataOnResize
+   * @param {function([number, Plottable, number][]):boolean} showInfo The
+   *     function to call with a data point which generates the necessary text
+   *     to display in the info-panel (if any). Must return whether the
+   *     info-panel should show with the given data values. Defaults to a
+   *     function that does nothing but returning `false`.
+   * @param {boolean} plotDataOnResize Whether the `plotData` function should be
+   *     called whenever the window resized. Defaults to false.
    */
   constructor(
       menuTitle, plotTitle, plotXLabel, plotYLabel, calculate, plotData,
-      plotAxes, plotDataOnResize = false) {
+      plotAxes, showInfo = null, plotDataOnResize = false) {
     /**
      * @type {string} menuText The text to display for this plot-option in the
      *     option-selection menu.
@@ -230,11 +241,6 @@ class PlotOption {
      */
     this.calculate = calculate;
 
-    /**
-     * @type {function(Selection, Plottable, number, number[], number[]):void}
-     *     The data-plotting function for this plot-option to use, which takes a
-     *     `Plottable` object and plots it inside a given display element.
-     */
     this.plotData = plotData;
 
     /**
@@ -244,6 +250,8 @@ class PlotOption {
      */
     this.plotAxes = plotAxes;
 
+    this.showInfo = showInfo || (() => false);
+
     this.plotDataOnResize = plotDataOnResize;
   }
 }
@@ -252,6 +260,8 @@ class PlotOption {
 class Plottable {
   /**
    * Creates a new `Plottable` instance.
+   * @param {object} rawData The raw JSON data that's used to generate this
+   *     plottable data.
    * @param {number[]} xExtent The extent of the X-values, in the form of `[min,
    *     max]`.
    * @param {number[]} yExtent The extent of the Y-values, in the form of `[min,
@@ -263,7 +273,8 @@ class Plottable {
    *     point. Must have the same length as `x` or be `null`. Defaults to
    *     `null`.
    */
-  constructor(xExtent, yExtent, x, y, magnitudes = null) {
+  constructor(rawData, xExtent, yExtent, x, y, magnitudes = null) {
+    this.rawData = rawData;
     this.xExtent = xExtent;
     this.yExtent = yExtent;
     this.x = x;

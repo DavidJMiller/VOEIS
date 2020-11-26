@@ -3,7 +3,7 @@
  *
  * VOEIS
  * David Miller, Kevin Song, and Qianlang Chen
- * A 11/21/20
+ * W 11/25/20
  */
 class View {
   //#region STATIC MEMBERS /////////////////////////////////////////////////////
@@ -146,6 +146,13 @@ class View {
     this.selections = new Map();
 
     this.changeView(this.currView);
+
+    // load the sloane's gap data
+    this.sloanesData = null;
+    DBHandler.getSloanes(d => {
+      this.sloanesData = d;
+      if (this.currView == 'global') this.viewSloanesGap();
+    });
   }
 
   //#endregion
@@ -167,6 +174,23 @@ class View {
           options[this.currView]['options'],
           options[this.currView]['currIndex']);
     }
+
+    if (newView == 'global') this.viewSloanesGap();
+  }
+
+  /** @private */
+  viewSloanesGap() {
+    if (!this.sloanesData) return;
+
+    // TODO: don't do this dirty way
+    const temp0 = Functions.SCATTER_MAX_RADIUS, temp1 = Util.generateColor;
+    Functions.SCATTER_MAX_RADIUS = 6;
+    Util.generateColor = () => '0, 0, 0';
+
+    this.mainPlot.drawPlot(this.sloanesData, 0);
+
+    Functions.SCATTER_MAX_RADIUS = temp0;
+    Util.generateColor = temp1;
   }
 
   /* plot is changing the plotted statistics */
@@ -190,9 +214,11 @@ class View {
 
     // for (let plot of this.plots) plot.drawPlot(sequence, index);
     this.mainPlot.drawPlot(sequence, index);
-    this.bottomPlot.drawPlot(sequence, index);
-    this.secondaryPlot.drawPlot(sequence, index);
-    this.ternaryPlot.drawPlot(sequence, index);
+    if (this.currView == 'local') {
+      this.bottomPlot.drawPlot(sequence, index);
+      this.secondaryPlot.drawPlot(sequence, index);
+      this.ternaryPlot.drawPlot(sequence, index);
+    }
     // this.textPlot.drawPlot(sequence, index);
   }
 
@@ -216,8 +242,6 @@ class View {
     // this.secondaryPlot.drawPlot(number, index);
     // this.ternaryPlot.drawPlot(number, index);
     // this.textPlot.drawPlot(number, index);
-
-    
   }
 
   //#endregion
@@ -243,13 +267,26 @@ class PlotOptions {
       Functions.sequence,
       Functions.scatter,
       Functions.scatterAxes,
+      info => {
+        InfoPanel.header(info[0][1].y[info[0][2]]);
+        for (let [s, d, i] of info) {
+          const color = `hsl(${Util.generateColor(s, 0.5)})`;
+          InfoPanel.text('Index ')
+              .text(d.x[i], color, true)
+              .text(' of ')
+              .text(d.rawData['a_num'], color, true)
+              .newline();
+        }
+
+        return true;
+      },
   );
 
   static GRID = new PlotOption(
       '',
-      'Last-Digit Distribution',
+      'Modulo {base} Remainder Distribution',
       '',
-      'Last Digit',
+      'Remainder',
       Functions.sequence,
       Functions.grid,
       Functions.gridAxes,
@@ -263,6 +300,17 @@ class PlotOptions {
       Functions.growthRate,
       Functions.line,
       Functions.scatterAxes,
+      info => {
+        for (let [s, d, i] of info) {
+          const color = `hsl(${Util.generateColor(s, 0.5)})`;
+          InfoPanel.text(d3.format(',.4')(d.y[i]) + 'x', color, true)
+              .text(` between indices ${d.x[i]} 🡒 ${d.x[i] + 1} of `)
+              .text(d.rawData['a_num'], color, true)
+              .newline();
+        }
+
+        return true;
+      },
       true,
   );
 
@@ -274,6 +322,21 @@ class PlotOptions {
       Functions.runningSum,
       Functions.line,
       Functions.scatterAxes,
+      info => {
+        for (let [s, d, i] of info) {
+          const color = `hsl(${Util.generateColor(s, 0.5)})`;
+          InfoPanel
+              .text(
+                  `The first ${d.x[i]} term${d.x[i] == 1 ? '' : 's'}` +
+                  ' sum to ')
+              .text(d.y[i], color, true)
+              .text(' in ')
+              .text(d.rawData['a_num'], color, true)
+              .newline();
+        }
+
+        return true;
+      },
       true,
   );
 
@@ -285,10 +348,20 @@ class PlotOptions {
       '',
       'Number of sequences each integer has appeared in',
       'Number',
-      'Number of sequences',
-      null,
-      null,
-      null,
+      'Number of sequences (log 10)',
+      Functions.sloanesGap,
+      Functions.scatter,
+      Functions.scatterAxes,
+      info => {
+        const [, d, i] = info[0];
+        InfoPanel.header(d.x[i])
+            .text(' has appeared in ')
+            .text(Math.round(Math.pow(10, d.y[i])), 'black', true)
+            .text(' OEIS sequences')
+            .newline();
+
+        return true;
+      },
   );
 
   //#endregion
@@ -303,6 +376,25 @@ class PlotOptions {
       Functions.neighbors,
       Functions.scatter,
       Functions.scatterAxes,
+      info => {
+        const [s, d, i] = info[0];
+        if (d.x[i] == 0) return false;
+
+        const color = `hsl(${Util.generateColor(s, 0.5)})`;
+        InfoPanel.text(d.y[i], color, true)
+            .text(' has appeared ')
+            .newline()
+            .text(Math.abs(d.x[i]), color, true)
+            .text(` position${Math.abs(d.x[i]) == 1 ? '' : 's'} `)
+            .text(`${d.x[i] < 0 ? 'before' : 'after'} `)
+            .text(d.rawData['num'], color, true)
+            .text(' in any sequence ')
+            .newline()
+            .text(d.magnitudes[i], color, true)
+            .text(' time' + (d.magnitudes[i] == 1 ? '' : 's'));
+
+        return true;
+      },
   );
 
   static INDEX_COUNTS = new PlotOption(
@@ -312,7 +404,23 @@ class PlotOptions {
       'Occurrence Frequency',
       Functions.indexCounts,
       Functions.bar,
-      Functions.indexCountAxes,
+      Functions.barAxesIndexCounts,
+      info => {
+        for (let [s, d, i] of info) {
+          if (!d.y[i]) continue;
+
+          const color = `hsl(${Util.generateColor(s, 0.5)})`
+          InfoPanel.text(d.rawData['num'], color, true)
+              .text(' has appeared at index ')
+              .text(d.x[i], color, true)
+              .text(' in any sequence ')
+              .text(d.y[i], color, true)
+              .text(' time' + (d.y[i] == 1 ? '' : 's'))
+              .newline();
+        }
+
+        return true;
+      },
   );
   //#endregion
 }
