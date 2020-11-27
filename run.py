@@ -1,5 +1,21 @@
+"""
+The web-application's entry point.
+
+Usage (from the same directory):
+    python run.py <settings>
+
+View help:
+    python run.py -h
+
+VOEIS
+David Miller, Kevin Song, and Qianlang Chen
+"""
+
+VERSION = "H 11/26/20"
+
 if __name__ == "__main__":
     import argparse
+    from data import voeis_db
     
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -7,31 +23,47 @@ if __name__ == "__main__":
         "--always-reload-files",
         help="always force reloading the HTML, CSS, and JavaScript files when"
         " the browser reloads",
-        action="store_true"
+        action="store_true",
     )
     parser.add_argument(
         "-e",
         "--neighbor-cap",
-        help="load at most this many number-neighbors per offset value",
+        help="load at most this many number-neighbors per offset value (default"
+        f": {voeis_db.MAX_NEIGHBORS_PER_OFFSET})",
+        metavar="<cap>",
         type=float,  # use float here to allow inputs like 2e9
+    )
+    parser.add_argument(
+        "-g",
+        "--sloanes-gap-range",
+        help="load numbers within this range ([min, max]) for the Sloane's Gap"
+        f" data (default: {voeis_db.SLOANES_GAP_MIN_NUM},"
+        f" {voeis_db.SLOANES_GAP_MAX_NUM})",
+        nargs=2,
+        metavar=("<min>", "<max>"),
+        type=float,
     )
     parser.add_argument(
         "-n",
         "--number-cap",
-        help="load at most this many numbers from the database",
+        help="load at most this many numbers from the database (default:"
+        f" {voeis_db.MAX_NUM_NUMBERS})",
+        metavar="<cap>",
         type=float,
     )
     parser.add_argument(
         "-o",
         "--offset-cap",
         help="load number-neighbors with up to exactly plus and minus this"
-        " offset value",
+        f" offset value (default: {voeis_db.MAX_NEIGHBOR_OFFSET})",
+        metavar="<cap>",
         type=float,
     )
     parser.add_argument(
         "-p",
         "--port",
         help="use this port number instead of the default 6060",
+        metavar="<number>",
         type=int,
     )
     parser.add_argument(
@@ -45,11 +77,17 @@ if __name__ == "__main__":
     parser.add_argument(
         "-s",
         "--sequence-cap",
-        help="load at most this many sequences from the database",
+        help="load at most this many sequences from the database (default:"
+        f" {voeis_db.MAX_NUM_SEQUENCES})",
+        metavar="<cap>",
         type=float,
     )
-    
-    from data import voeis_db
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version=VERSION,
+    )
     
     args = parser.parse_args()
     if args.sequence_cap:
@@ -71,6 +109,12 @@ if __name__ == "__main__":
         x = int(args.neighbor_cap)
         print(f"Loading up to the first {x:,} popular neighbors per offset")
         voeis_db.MAX_NEIGHBORS_PER_OFFSET = x
+    
+    if args.sloanes_gap_range:
+        x, y = map(int, args.sloanes_gap_range)
+        print(f"Loading numbers within [{x}, {y}] for the Sloane's Gap data")
+        voeis_db.SLOANES_GAP_MIN_NUM = x
+        voeis_db.SLOANES_GAP_MAX_NUM = y
     
     if args.reload: print("Using the Flask reloader")
     

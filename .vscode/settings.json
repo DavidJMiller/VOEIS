@@ -3,6 +3,7 @@
     "a",
     "cell",
     "cell elems",
+    "clickables",
     "cmunbl",
     "cmunbx",
     "cmunrm",
@@ -18,12 +19,14 @@
     "gap",
     "htmls",
     "jsonify",
+    "nargs",
     "num",
     "num freqs",
     "nums",
     "oeis",
     "outdegree",
     "plottable",
+    "pycurl",
     "sequence",
     "sloanes",
     "sloanes gap",
@@ -31,5 +34,6 @@
     "test",
     "voeis",
     "voeis data test"
-  ]
+  ],
+  "python.pythonPath": "C:\\ProgramData\\Anaconda3\\python.exe"
 }

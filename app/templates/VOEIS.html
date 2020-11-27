@@ -91,37 +91,36 @@
       </div>
       <div id="view-wrapper" class="col-9">
         <div class="row h-75" id="view-top">
-          <div class="col-8">
-            <svg id="main-plot-svg" class="plot-svg"></svg>
-          </div>
+          <div id="main-plot" class="col-8 plot-container"></div>
           <div id="right-view-wrapper" class="col-4">
-            <div id="view-info" class="row h-33">
-              <svg id="text-plot-svg" class="plot-svg""></svg>
-            </div>
-            <div class=" row h-33">
-                <svg id="secondary-plot-svg" class="plot-svg"></svg>
+            <div class="row h-33">
+              <div id="text-plot" class="col-12 plot-container"></div>
             </div>
             <div class="row h-33">
-              <svg id="ternary-plot-svg" class="plot-svg"></svg>
+              <div id="secondary-plot" class="col-12 plot-container"></div>
+            </div>
+            <div class="row h-33">
+              <div id="ternary-plot" class="col-12 plot-container"></div>
             </div>
           </div>
         </div>
         <div class="row h-25">
-          <div class="col-12">
-            <svg id="bottom-plot-svg" class="plot-svg"></svg>
-          </div>
+          <div id="bottom-plot" class="col-12 plot-container"></div>
         </div>
       </div>
     </div>
   </div>
   <div class="info-panel" id="info-panel"></div>
   <script src="static/js/util.js{{update_time}}"></script>
-  <script src="static/js/dbHandler.js{{update_time}}"></script>
-  <script src="static/js/infoPanel.js{{update_time}}"></script>
+  <script src="static/js/db-handler.js{{update_time}}"></script>
+  <script src="static/js/info-panel.js{{update_time}}"></script>
+  <script src="static/js/plottable.js{{update_time}}"></script>
+  <script src="static/js/plot-option.js{{update_time}}"></script>
+  <script src="static/js/plot-menu.js{{update_time}}"></script>
   <script src="static/js/functions.js{{update_time}}"></script>
   <script src="static/js/plot.js{{update_time}}"></script>
   <script src="static/js/view.js{{update_time}}"></script>
-  <script src="static/js/searchBar.js{{update_time}}"></script>
+  <script src="static/js/search-bar.js{{update_time}}"></script>
   <script src="static/js/script.js{{update_time}}"></script>
 </body>
 

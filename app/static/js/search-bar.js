@@ -3,7 +3,7 @@
  *
  * VOEIS
  * David Miller, Kevin Song, and Qianlang Chen
- * W 11/25/20
+ * H 11/26/20
  */
 class SearchBar {
   //#region STATIC MEMBERS /////////////////////////////////////////////////////
@@ -63,13 +63,13 @@ class SearchBar {
 
     /**
      * @private @type {Selection} A D3-selection containing the search-bar
-     *     element.
+     *   element.
      */
     this.elem = d3.select('#search-bar');
 
     /**
      * @private @type {Selection} A D3-selection containing the view-navigator
-     *     button group.
+     *   button group.
      */
     this.viewNavigator = this.elem.select('#search-bar-view-navigator');
 
@@ -78,7 +78,7 @@ class SearchBar {
 
     /**
      * @private @type {Selection} A D3-selection containing the clear-input
-     *     button.
+     *   button.
      */
     this.clearButton = this.elem.select('#search-bar-clear-button');
 
@@ -89,98 +89,94 @@ class SearchBar {
 
     /**
      * @private @type {Selection} A D3-selection containing the search box's
-     *     invalid-tooltip.
+     *   invalid-tooltip.
      */
     this.invalidTooltip = this.elem.select('#search-bar-invalid-tooltip');
 
     /**
      * @private @type {Selection} A D3-selection containing the spinning
-     *     "loading" circle.
+     *   "loading" circle.
      */
     this.loadingIndication = this.elem.select('#search-bar-loading-indication');
 
     /**
      * @private @type {Selection} A D3-selection containing the "no result"
-     *     indication text.
+     *   indication text.
      */
     this.noResIndication = this.elem.select('#search-bar-no-result-indication');
 
     /**
      * @private @type {Selection} A D3-selection containing the back-to-history
-     *     button.
+     *   button.
      */
     this.backButton = this.elem.select('#search-bar-back-button');
 
     /**
      * @private @type {Selection} A D3-selection containing the search result
-     *     list.
+     *   list.
      */
     this.resList = this.elem.select('#search-bar-result-list');
 
     /**
      * @private @type {Selection} A D3-selection containing the preset button
-     *     group.
+     *   group.
      */
     this.presetList = d3.select('#preset-list');
 
     /**
      * @private @type {SearchBarResultItem[]} The search result items currently
-     *     shown, or `null` if it's showing the history items.
+     *   shown, or `null` if it's showing the history items.
      */
     this.resShowing = null;
 
     /**
      * @private @type {Map<string, SearchBarResultItem>} The search result
-     *     history for searching sequences.
+     *   history for searching sequences.
      */
     this.sequenceHistory = new Map();
 
     /**
      * @private @type {Map<number, SearchBarResultItem>} The search result
-     *     history for searching numbers.
+     *   history for searching numbers.
      */
     this.numberHistory = new Map();
 
     /**
      * @private @type {Map<string, SearchBarResultItem>} The sequences to be
-     *     left over when the history is cleared.
+     *   left over when the history is cleared.
      */
     this.defaultSequenceHistory = null;
 
     /**
      * @private @type {Map<number, SearchBarResultItem>} The numbers to be left
-     *     over when the history is cleared.
+     *   over when the history is cleared.
      */
     this.defaultNumberHistory = null;
 
     /**
      * @private @type {SearchBarResultItem[]} An array recording whether each
-     *     "color index" has been used as a sequence-result selection. Since
-     *     consecutive indices work the best when generating golden-angle
-     *     colors, we'd like to choose the smallest unused index for our next
-     *     selection.
+     *   "color index" has been used as a sequence-result selection. Since
+     *   consecutive indices work the best when generating golden-angle
+     *   colors, we'd like to choose the smallest unused index for our next
+     *   selection.
      */
     this.sequenceSelectionByIndex = new Array(144).fill(null);
 
     /**
      * @private @type {SearchBarResultItem[]} Similar to
-     *     `sequenceSelectionByIndex` but for numbers.
+     *   `sequenceSelectionByIndex` but for numbers.
      */
     this.numberSelectionByIndex = new Array(144).fill(null);
 
     /**
      * @private @type {Map<SearchBarResultItem, number>} Maps each selection to
-     *     its index.
+     *   its index.
      */
     this.selections = new Map();
 
     this.loadDefaultHistoryItems();
     this.initEvents();
   }
-
-  //#endregion
-
-  //#region METHODS ////////////////////////////////////////////////////////////
 
   /** @private Loads the default history items from the database. */
   loadDefaultHistoryItems() {
@@ -189,11 +185,11 @@ class SearchBar {
         remaining = sequences.length + numbers.length,
         onLoadingComplete = () => {
           this.defaultSequenceHistory =
-              new Map([...this.defaultSequenceHistory.entries()].sort(
-                  (x, y) => sequences.indexOf(y[0]) - sequences.indexOf(x[0])));
+            new Map([...this.defaultSequenceHistory.entries()].sort(
+              (x, y) => sequences.indexOf(y[0]) - sequences.indexOf(x[0])));
           this.defaultNumberHistory =
-              new Map([...this.defaultNumberHistory.entries()].sort(
-                  (x, y) => numbers.indexOf(y[0]) - numbers.indexOf(x[0])));
+            new Map([...this.defaultNumberHistory.entries()].sort(
+              (x, y) => numbers.indexOf(y[0]) - numbers.indexOf(x[0])));
           this.clearHistory();
           this.resList.node().scrollTop = -this.resList.node().scrollHeight;
         };
@@ -205,7 +201,7 @@ class SearchBar {
       DBHandler.getSequence(sequences[i], res => {
         if (Object.keys(res).length) {
           this.defaultSequenceHistory.set(
-              sequences[i], new SearchBarResultItem(res));
+            sequences[i], new SearchBarResultItem(res));
         }
         if (!--remaining) onLoadingComplete();
       });
@@ -217,7 +213,7 @@ class SearchBar {
         // sometimes res is empty due to truncated database for testing purposes
         if (Object.keys(res).length) {
           this.defaultNumberHistory.set(
-              numbers[i], new SearchBarResultItem(res));
+            numbers[i], new SearchBarResultItem(res));
         }
         if (!--remaining) onLoadingComplete();
       });
@@ -226,39 +222,56 @@ class SearchBar {
 
   /** @private Register events for buttons and other elements. */
   initEvents() {
+    let navigatorInfo = {
+      'local': 'Learn more about your favorite sequences',
+      'global': 'Compare your favorite sequences to the entire OEIS',
+      'fixed': 'Investigate your favorite numbers',
+    };
     for (let view of SearchBar.VIEWS) {
-      this.viewNavigator.select(`#search-bar-view-navigator-${view}-button`)
-          .on('click', () => this.changeView(view));
+      let button =
+        this.viewNavigator.select(`#search-bar-view-navigator-${view}-button`);
+      button
+        .on('click',
+          () => {
+            this.changeView(view);
+            InfoPanel.hide();
+          })
+        .on('mouseenter',
+          () => {
+            InfoPanel.header(Util.toTitleCase(view) + ' View')
+              .text(navigatorInfo[view])
+              .show(button, 0, 1, 347.2);
+          })
+        .on('mouseleave', () => InfoPanel.hide());
     }
 
     this.clearButton.on('click', () => this.clearSearchBox());
     this.searchButton.on('click', () => this.triggerSearch());
     this.searchBox
-        .on('keydown',
-            e => {
-              switch (e.keyCode) {
-                case 13:  // enter
-                  this.triggerSearch();
-                  break;
+      .on('keydown',
+        e => {
+          switch (e.keyCode) {
+            case 13:  // enter
+              this.triggerSearch();
+              break;
 
-                case 27:  // escape
-                  this.clearSearchBox();
-                  break;
-              }
-            })
-        .on('input',
-            () => {
-              this.searchBox.classed('is-invalid', false);
-              this.clearButton.style(
-                  'display',
-                  () => this.searchBox.node().value ? 'inline-block' : 'none');
+            case 27:  // escape
+              this.clearSearchBox();
+              break;
+          }
+        })
+      .on('input',
+        () => {
+          this.searchBox.classed('is-invalid', false);
+          this.clearButton.style('display',
+            () => this.searchBox.node().value ? 'inline-block' : 'none');
 
-              if (!this.searchBox.node().value && this.resShowing) {
-                this.resShowing = null;
-                this.showHistory();
-              }
-            })
-        .on('blur', () => this.searchBox.classed('is-invalid', false));
+          if (!this.searchBox.node().value && this.resShowing) {
+            this.resShowing = null;
+            this.showHistory();
+          }
+        })
+      .on('blur', () => this.searchBox.classed('is-invalid', false));
     this.backButton.on('click', () => {
       this.showHistory();
       this.resList.node().scrollTop = -this.resList.node().scrollHeight;
@@ -266,14 +279,18 @@ class SearchBar {
 
     for (let i = 0; i < SearchBar.PRESET_SEQUENCE_A_NUMS.length; i++) {
       this.presetList.select(`#preset-list-preset-${i + 1}-button`)
-          .on('click', () => this.selectPreset(i));
+        .on('click', () => this.selectPreset(i));
     }
   }
 
+  //#endregion
+
+  //#region METHODS ////////////////////////////////////////////////////////////
+
   /**
    * @private Clears both the sequence- and number-history and fill them with
-   *     default items. Note that this method does NOT clear selections before
-   *     clearing the history.
+   *   default items. Note that this method does NOT clear selections before
+   *   clearing the history.
    */
   clearHistory() {
     // concat() makes deep copies
@@ -293,7 +310,7 @@ class SearchBar {
     this.resList.selectAll('div').remove();
 
     let toShow =
-        this.currView == 'fixed' ? this.numberHistory : this.sequenceHistory
+      this.currView == 'fixed' ? this.numberHistory : this.sequenceHistory
     for (let item of toShow.values()) this.addToResultList(item);
   }
 
@@ -304,7 +321,7 @@ class SearchBar {
     document.documentElement.style.setProperty('--back-button-height', '42px');
     this.loadingIndication.style('display', 'none');
     this.noResIndication.style(
-        'display', results.length ? 'none' : 'list-item');
+      'display', results.length ? 'none' : 'list-item');
     this.resList.selectAll('div').remove();
     this.resShowing = results;
 
@@ -314,35 +331,35 @@ class SearchBar {
 
   /** @private Adds an item to the result list. */
   addToResultList(resItem) {
-    let elem = this.resList.append('div')
-                   .attr(
-                       'class',
-                       'row btn w-100 btn-outline-dark search-bar-result-item')
-                   .datum(resItem);
+    let elem =
+      this.resList.append('div')
+        .attr('class', 'row btn w-100 btn-outline-dark search-bar-result-item')
+        .datum(resItem);
 
     elem.append('b').text(resItem.title);
     if (resItem.subtitle) elem.append('span').text(resItem.subtitle);
     if (resItem.contents) elem.append('p').text(resItem.contents);
 
-    elem.on('click',
-            () => {
-              this.selectResItem(resItem);
-              if (elem.classed('selected')) InfoPanel.hide();
-            })
-        .on('mouseover',
-            () => {
-              if (!resItem.contents) return;
-              InfoPanel.text(resItem.rawData['name'], 'black', true)
-                  .newline()
-                  .newline()
-                  .text(resItem.contents)
-                  .show(elem, 1, 0, 1042);
-            })
-        .on('mouseout', () => InfoPanel.hide());
+    elem
+      .on('click',
+        () => {
+          this.selectResItem(resItem);
+          if (elem.classed('selected')) InfoPanel.hide();
+        })
+      .on('mouseenter',
+        () => {
+          if (!resItem.contents) return;
+          InfoPanel.text(resItem.rawData['name'], 'black', true)
+            .newline()
+            .newline()
+            .text(resItem.contents)
+            .show(elem, 1, 0, 1042);
+        })
+      .on('mouseleave', () => InfoPanel.hide());
 
     if (this.selections.has(resItem)) {
       let color =
-          `hsla(${Util.generateColor(this.selections.get(resItem))}, 0.3333)`;
+        `hsla(${Util.generateColor(this.selections.get(resItem))}, 0.3333)`;
       elem.classed('selected', true).style('background-color', color);
     }
 
@@ -358,15 +375,14 @@ class SearchBar {
     // update search bar element styles
     for (let view of SearchBar.VIEWS) {
       this.viewNavigator.select(`#search-bar-view-navigator-${view}-button`)
-          .classed('btn-secondary', view == newView)
-          .classed('btn-outline-secondary', view != newView);
+        .classed('btn-secondary', view == newView)
+        .classed('btn-outline-secondary', view != newView);
     }
-    this.searchBox.attr(
-        'placeholder',
-        newView == 'fixed' ? 'Lookup Integers' : 'Search Sequences');
+    this.searchBox.attr('placeholder',
+      newView == 'fixed' ? 'Lookup Integers' : 'Search Sequences');
     this.presetList.style('display', newView == 'fixed' ? 'none' : '');
     document.documentElement.style.setProperty(
-        '--preset-list-height', newView == 'fixed' ? '54px' : '144px');
+      '--preset-list-height', newView == 'fixed' ? '54px' : '144px');
 
     // update the result list
     if (newView == 'fixed' || !this.resShowing)
@@ -395,9 +411,9 @@ class SearchBar {
   triggerSearch() {
     let query = this.searchBox.node().value.trim();
     if (!query) {
-      this.invalidTooltip.html(
-          this.currView == 'fixed' ? 'Enter your favorite integer :)'
-                                   : 'Enter some of your favorite integers :)');
+      this.invalidTooltip.html(this.currView == 'fixed'
+          ? 'Enter your favorite integer :)'
+          : 'Enter some of your favorite integers :)');
       this.searchBox.classed('is-invalid', true);
       this.searchBox.node().focus();
 
@@ -418,7 +434,7 @@ class SearchBar {
         let number = +query;
         if (!Object.keys(res).length) {
           this.invalidTooltip.html(
-              `${number} has not appeared in any OEIS sequence :(`);
+            `${number} has not appeared in any OEIS sequence :(`);
           this.searchBox.classed('is-invalid', true);
 
           return;
@@ -510,7 +526,7 @@ class SearchBar {
   /** @private Deselects all selections. */
   deselectAll(inAllViews = false) {
     let selectionsByView =
-        [this.sequenceSelectionByIndex, this.numberSelectionByIndex];
+      [this.sequenceSelectionByIndex, this.numberSelectionByIndex];
     if (this.currView == 'fixed') selectionsByView.reverse();
 
     for (let i = 0; i <= +inAllViews; i++) {
@@ -530,9 +546,9 @@ class SearchBar {
 
     let presetANums = SearchBar.PRESET_SEQUENCE_A_NUMS[index];
     if (presetANums.length ==
-            this.sequenceSelectionByIndex.filter(x => x).length &&
-        presetANums.every(
-            x => this.selections.has(this.defaultSequenceHistory.get(x)))) {
+        this.sequenceSelectionByIndex.filter(x => x).length &&
+      presetANums.every(
+        x => this.selections.has(this.defaultSequenceHistory.get(x)))) {
       return;  // check if the selections already matches the preset precisely
                // since redrawing is expensive.
     }
@@ -563,7 +579,7 @@ class SearchBarResultItem {
 
     if (res.hasOwnProperty('a_num')) {  // sequence
       this.title =
-          res['name'].replace(/((( [^e0-9])?(\:|\.|\,))|( \()).*/, '').trim();
+        res['name'].replace(/((( [^e0-9])?(\:|\.|\,))|( \()).*/, '').trim();
       this.subtitle = res['a_num'];
       this.contents = res['terms'].join(', ');
     } else {  // number

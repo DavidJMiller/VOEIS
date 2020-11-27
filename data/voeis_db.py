@@ -7,7 +7,7 @@ correctly-formatted data. See build_voeis_db.py for more info.
 
 VOEIS
 Qianlang Chen
-F 11/06/20
+H 11/26/20
 """
 
 SEQUENCE_DB_PATH = "data/sequences.txt"
@@ -17,6 +17,8 @@ MAX_NUM_SEQUENCES = 2**31 - 1
 MAX_NUM_NUMBERS = 20_736
 MAX_NEIGHBOR_OFFSET = 6
 MAX_NEIGHBORS_PER_OFFSET = 12
+SLOANES_GAP_MIN_NUM = 0
+SLOANES_GAP_MAX_NUM = 10_000
 
 sequence_data = {}
 number_data = {}
@@ -28,6 +30,7 @@ def init():
     constructing dictionaries for fast lookups.
     """
     with open(SEQUENCE_DB_PATH, "r") as sequence_db:
+        print("  Loading sequences...")
         for i, line in enumerate(sequence_db, 1):
             if i == MAX_NUM_SEQUENCES: break
             if i % 50_000 == 0: print(f"    At sequence {i:,}")
@@ -41,6 +44,7 @@ def init():
             }
     
     with open(NUMBER_DB_PATH, "r") as number_db:
+        print("  Loading numbers...")
         for i, line in enumerate(number_db, 1):
             if i == MAX_NUM_NUMBERS: break
             if i % 25_000 == 0: print(f"    At number {i:,}")
@@ -184,4 +188,5 @@ def get_sloanes():
     return {
         num: num_data['total_num_sequences']
         for num, num_data in number_data.items()
+        if num >= SLOANES_GAP_MIN_NUM and num <= SLOANES_GAP_MAX_NUM
     }

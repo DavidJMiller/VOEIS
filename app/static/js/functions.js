@@ -4,7 +4,7 @@
  *
  * VOEIS
  * David Miller, Kevin Song, and Qianlang Chen
- * W 11/25/20
+ * H 11/26/20
  */
 class Functions {
   //#region STAT-CALCULATING FUNCTIONS /////////////////////////////////////////
@@ -12,7 +12,7 @@ class Functions {
   //#region SEQUENCES ----------------------------------------------------------
 
   static growthRate(sequence) {
-    let x = [], y = [], yMin = Infinity, yMax = -Infinity;
+    let x = [], y = [], yMin = 0, yMax = 1;
     for (let i = 1; i < sequence['terms'].length; i++) {
       x.push(i);
       y.push(sequence['terms'][i] / (sequence['terms'][i - 1] || 1));
@@ -51,19 +51,19 @@ class Functions {
   static SLOANES_GAP_MAX_NUM = 1e4;
 
   static sloanesGap(numFreqs) {
-    const xMin = Functions.SLOANES_GAP_MIN_NUM,
-          xMax = Functions.SLOANES_GAP_MAX_NUM;
-    let x = [], y = [], yMax = -Infinity;
+    let x = [], y = [], xMin = Infinity, xMax = -Infinity, yMax = -Infinity;
     for (let num in numFreqs) {
       num = +num;
-      if (num < xMin || num > xMax) continue;
-      const freq = Math.log10(+numFreqs[num]);
+      if (num < Functions.SLOANES_GAP_MIN_NUM ||
+        num > Functions.SLOANES_GAP_MAX_NUM)
+        continue;
 
+      const freq = Math.log10(+numFreqs[num]);
       x.push(num);
       y.push(freq);
+      xMin = Math.min(xMin, num);
+      xMax = Math.max(xMax, num);
       yMax = Math.max(yMax, freq);
-
-      if (x.length > xMax - xMin) break;
     }
 
     return new Plottable(numFreqs, [xMin, xMax], [0, yMax], x, y);
@@ -97,7 +97,7 @@ class Functions {
     let x = [0], y = [number['num']], magnitudes = [0], yMin = Infinity,
         yMax = -Infinity, xMin = Infinity, xMax = -Infinity, magnitudeMax = 0;
     const sortedDistances =
-        Object.keys(number.neighbors).sort((x, y) => Math.abs(x) - Math.abs(y));
+      Object.keys(number.neighbors).sort((x, y) => Math.abs(x) - Math.abs(y));
     for (let distance of sortedDistances) {
       let neighborCounts = number.neighbors[distance];
       for (let neighbor in neighborCounts) {
@@ -114,7 +114,7 @@ class Functions {
     magnitudes[0] = magnitudeMax * 2;
 
     return new Plottable(
-        number, [xMin - 1, xMax + 1], [yMin, yMax], x, y, magnitudes);
+      number, [xMin - 1, xMax + 1], [yMin, yMax], x, y, magnitudes);
   }
 
   //#endregion
@@ -148,15 +148,15 @@ class Functions {
       for (let xs of metadata.values()) xs.delete(index);
 
       wrapper.classed('active', false)
-          .selectAll('.plot-bar-bar-clickable')
-          .remove();
+        .selectAll('.plot-bar-bar-clickable')
+        .remove();
       wrapper.selectAll('.plot-bar-bar')
-          .transition('fade')
-          .ease(d3.easeSinIn)
-          .duration(Functions.TRANSITION_DURATION)
-          .attr('y', '100%')
-          .attr('height', '0%')
-          .on('end', () => wrapper.remove());
+        .transition('fade')
+        .ease(d3.easeSinIn)
+        .duration(Functions.TRANSITION_DURATION)
+        .attr('y', '100%')
+        .attr('height', '0%')
+        .on('end', () => wrapper.remove());
 
       return;
     }
@@ -164,24 +164,24 @@ class Functions {
     const xScale = d3.scaleLinear().domain(xExtent).range([0, 100]),
           yScale = d3.scaleLinear().domain(data.yExtent).range([0, 100]),
           fullWidth = 100 / (xExtent[1] - xExtent[0] + 1),
-          width = (1 - Functions.BAR_MARGIN) *
-        (100 / (xExtent[1] - xExtent[0] + 1));
+          width =
+            (1 - Functions.BAR_MARGIN) * (100 / (xExtent[1] - xExtent[0] + 1));
 
     if (!wrapper.empty() && wrapper.classed('active')) {
       // extent has been changed: move the elements
       wrapper.selectAll('.plot-bar-bar-clickable')
-          .attr('x', d => xScale(d) - fullWidth / 2 + '%')
-          .attr('y', '0%')
-          .attr('width', fullWidth + '%')
-          .attr('height', '100%');
+        .attr('x', d => xScale(d) - fullWidth / 2 + '%')
+        .attr('y', '0%')
+        .attr('width', fullWidth + '%')
+        .attr('height', '100%');
       wrapper.selectAll('.plot-bar-bar')
-          .transition('move')
-          .ease(d3.easeSinOut)
-          .duration(Functions.TRANSITION_DURATION)
-          .attr('x', (_d, i) => (xScale(data.x[i]) - width / 2) + '%')
-          .attr('y', (_d, i) => (100 - yScale(data.y[i])) + '%')
-          .attr('height', (_d, i) => yScale(data.y[i]) + '%')
-          .attr('width', width + '%');
+        .transition('move')
+        .ease(d3.easeSinOut)
+        .duration(Functions.TRANSITION_DURATION)
+        .attr('x', (_d, i) => (xScale(data.x[i]) - width / 2) + '%')
+        .attr('y', (_d, i) => (100 - yScale(data.y[i])) + '%')
+        .attr('height', (_d, i) => yScale(data.y[i]) + '%')
+        .attr('width', width + '%');
 
       return;
     }
@@ -197,33 +197,33 @@ class Functions {
           strokeColor = `hsla(${Util.generateColor(index)}, 0.6667)`;
 
     wrapper = elem.append('g')
-                  .attr('class', 'plot-data-elem active')
-                  .attr('id', 'plot-data-wrapper-' + index);
+                .attr('class', 'plot-data-elem active')
+                .attr('id', 'plot-data-wrapper-' + index);
 
     wrapper.selectAll('.plot-bar-bar')
-        .data(data.x)
-        .join('rect')
-        .attr('class', 'plot-bar-bar')
-        .attr('id', (_d, i) => 'plot-bar-bar-' + i)
-        .attr('x', d => xScale(d) - width / 2 + '%')
-        .attr('y', '100%')
-        .attr('height', '0%')
-        .attr('width', width + '%')
-        .style('fill', fillColor)
-        .style('stroke', strokeColor)
-        .style('stroke-width', '1px')
-        .style('z-order', '1728')
-        .transition('fade')
-        .ease(d3.easeElasticOut)
-        .delay(
-            (_d, i) =>
-                i * Functions.TOTAL_TRANSITION_DURATION / (data.length || 1))
-        .duration(Functions.TRANSITION_DURATION * 2)
-        .attr('y', (_d, i) => (100 - yScale(data.y[i])) + '%')
-        .attr('height', (_d, i) => yScale(data.y[i]) + '%');
+      .data(data.x)
+      .join('rect')
+      .attr('class', 'plot-bar-bar')
+      .attr('id', (_d, i) => 'plot-bar-bar-' + i)
+      .attr('x', d => xScale(d) - width / 2 + '%')
+      .attr('y', '100%')
+      .attr('height', '0%')
+      .attr('width', width + '%')
+      .style('fill', fillColor)
+      .style('stroke', strokeColor)
+      .style('stroke-width', '1px')
+      .style('z-order', '1728')
+      .transition('fade')
+      .delay(
+        (_d, i) => i * Functions.TOTAL_TRANSITION_DURATION / (data.length || 1))
+      .ease(d3.easeElasticOut)
+      .duration(Functions.TRANSITION_DURATION * 2)
+      .attr('y', (_d, i) => (100 - yScale(data.y[i])) + '%')
+      .attr('height', (_d, i) => yScale(data.y[i]) + '%');
 
     // draw clickable areas
-    wrapper.selectAll('.plot-bar-bar-clickable')
+    let clickables =
+      wrapper.selectAll('.plot-bar-bar-clickable')
         .data(data.x)
         .join('rect')
         .attr('class', 'plot-bar-bar-clickable')
@@ -233,34 +233,64 @@ class Functions {
         .attr('y', '0%')
         .attr('width', fullWidth + '%')
         .attr('height', '100%')
-        .on('mouseover',
-            e => {
-              let target = d3.select(e.currentTarget);
-              const i =
-                  +target.attr('id').substr('plot-bar-bar-clickable-'.length);
+        .style('display', 'none')
+        .on('mouseenter',
+          e => {
+            let target = d3.select(e.currentTarget);
+            const i =
+              +target.attr('id').substr('plot-bar-bar-clickable-'.length);
 
-              let info =
-                  Array.from(metadata.get(data.x[i])).map(x => x.concat(i));
-              if (showInfo(info)) {
-                let tallest = null, tallestHeight = -1;
-                elem.selectAll('#plot-bar-bar-' + i).each((_d, i, a) => {
-                  let curr = d3.select(a[i]),
-                      currHeight = +curr.attr('height').slice(0, -1);
-                  if (currHeight > tallestHeight) {
-                    tallestHeight = currHeight;
-                    tallest = curr;
-                  }
-                });
-                InfoPanel.show(tallest);
-              }
-            })
-        .on('mouseout', () => InfoPanel.hide());
+            let info =
+              Array.from(metadata.get(data.x[i])).map(x => x.concat(i));
+            if (showInfo(info)) {
+              let tallest = null, tallestHeight = -1;
+              elem.selectAll('#plot-bar-bar-' + i).each((_d, i, a) => {
+                let curr = d3.select(a[i]),
+                    currHeight = +curr.attr('height').slice(0, -1);
+                if (currHeight > tallestHeight) {
+                  tallestHeight = currHeight;
+                  tallest = curr;
+                }
+              });
+              InfoPanel.show(tallest);
+            }
+          })
+        .on('mouseleave', () => InfoPanel.hide());
+
+    clickables.transition()
+      .delay(
+        (_d, i) => i * Functions.TOTAL_TRANSITION_DURATION / (data.length || 1))
+      .style('display', '');
   }
 
-  static barAxesIndexCounts(elem, title, xLabel, yLabel, xExtent, yExtent) {
-    Functions.scatterAxes(elem, title, xLabel, yLabel, xExtent, yExtent)
-    elem.select('#plot-y-label-text').html('');
+  static barAxesIndexCounts(
+    elem, title, xLabel, _yLabel, xExtent, _yExtent, _plotMenu) {
+    // this function is called any time whenever there is a need to redraw the
+    // axes
+    const plotWidth = elem.property('clientWidth'),
+          plotHeight = elem.property('clientHeight');
+
+    // create scale for axis
+    const xAxisScale = d3.scaleLinear().domain(xExtent).range([0, plotWidth]),
+          xAxis = d3.axisBottom().scale(xAxisScale).ticks(5);
+
+    // plot axes
+    elem.select('#plot-x-axis')
+      .transition('move')
+      .ease(d3.easeSinOut)
+      .duration(Functions.TRANSITION_DURATION)
+      .call(xAxis);
+
+    // show axis and title labels
+    let tf = `translate(${plotWidth / 2}, ${plotHeight + 32})`;
+    elem.select('#plot-x-label-text').attr('transform', tf).text(xLabel);
+
+    tf = `translate(${plotWidth / 2}, -20)`;
+    elem.select('#plot-title-text').attr('transform', tf).text(title);
+
+    // clear unrelated elements
     elem.select('#plot-y-axis').html('');
+    elem.select('#plot-y-label-text').html('');
   }
 
   //#endregion
@@ -271,7 +301,7 @@ class Functions {
   static GRID_DEFAULT_BASE = 10;
 
   /** The number of columns in the grid plot. */
-  static GRID_NUM_COLS = 40;
+  static GRID_NUM_COLS = 60;
 
   /**
    * The maximum number of empty columns kept in the grid before it collapses
@@ -305,7 +335,7 @@ class Functions {
     // use `wrapper.datum()` to store the plot's metadata
     /**
      * @type {[number, Map<number, number[]>, Map<number, string>, Map<number,
-     *     Map<number, number[]>>]}
+     *   Map<number, number[]>>]}
      */
     let [base, sequences, sequenceData, cells] = wrapper.datum();
 
@@ -389,7 +419,7 @@ class Functions {
       prevCol = currCol;
 
       const cellIndex =
-          numCells + currCol * base + (nums[i] % base + base) % base;
+        numCells + currCol * base + (nums[i] % base + base) % base;
       buffer[cellIndex] = [nums[i], cells.get(nums[i])];
     }
 
@@ -429,83 +459,82 @@ class Functions {
     // selection; multiple occurrences of the same number within the same
     // sequence would be handled by having stacked rects with the same color
     let contents =
-        Functions.gridCells(wrapper, base, cellData, sequenceData)
-            .selectAll('.plot-grid-cell-contents.active')
-            .data(
-                /**
-                 * @param {[number, Map<number, number[]>]} d
-                 * <sequenceIndex, occurrences[]>
-                 */
-                // data:
-                // [seqIndex, selectionIndex, totalSelections, occurrences[]]
-                d => d ? Array.from(d[1])
-                             .sort((x, y) => x[0] - y[0])
-                             .map((x, i) => [x[0], i, d[1].size, x[1]])
-                       : [],
-                // key: sequenceIndex
-                d => d[0]);
+      Functions.gridCells(wrapper, base, cellData, sequenceData)
+        .selectAll('.plot-grid-cell-contents.active')
+        .data(
+          /**
+           * @param {[number, Map<number, number[]>]} d
+           * <sequenceIndex, occurrences[]>
+           */
+          // data:
+          // [seqIndex, selectionIndex, totalSelections, occurrences[]]
+          d => d ? Array.from(d[1])
+                     .sort((x, y) => x[0] - y[0])
+                     .map((x, i) => [x[0], i, d[1].size, x[1]])
+                 : [],
+          // key: sequenceIndex
+          d => d[0]);
     contents.exit()
-        .classed('active', false)
-        .transition()
-        .ease(d3.easeSinOut)
-        .duration(Functions.TRANSITION_DURATION)
-        .attr('x', d => 100 * (d[1] + 0.5) / d[2] + '%')
-        .attr('y', '50%')
-        .attr('width', '0%')
-        .attr('height', '0%')
-        .remove();
+      .classed('active', false)
+      .transition()
+      .ease(d3.easeSinOut)
+      .duration(Functions.TRANSITION_DURATION)
+      .attr('x', d => 100 * (d[1] + 0.5) / d[2] + '%')
+      .attr('y', '50%')
+      .attr('width', '0%')
+      .attr('height', '0%')
+      .remove();
     contents.transition()
-        .ease(d3.easeSinOut)
-        .duration(Functions.TRANSITION_DURATION)
-        .attr('x', d => 100 * d[1] / d[2] + '%')
-        .attr('width', d => 100 / d[2] + '%');
+      .ease(d3.easeSinOut)
+      .duration(Functions.TRANSITION_DURATION)
+      .attr('x', d => 100 * d[1] / d[2] + '%')
+      .attr('width', d => 100 / d[2] + '%');
     contents = contents.enter()
-                   .append('svg')
-                   .attr('class', 'plot-grid-cell-contents active')
-                   .attr('x', d => 100 * d[1] / d[2] + '%')
-                   .attr('y', '0%')
-                   .attr('width', d => 100 / d[2] + '%')
-                   .attr('height', '100%')
-                   .merge(contents);
+                 .append('svg')
+                 .attr('class', 'plot-grid-cell-contents active')
+                 .attr('x', d => 100 * d[1] / d[2] + '%')
+                 .attr('y', '0%')
+                 .attr('width', d => 100 / d[2] + '%')
+                 .attr('height', '100%')
+                 .merge(contents);
 
     let rects = contents.selectAll('rect').data(
-        /**
-         * @param {[number, number, number, number[]]} d
-         * [seqIndex, selectionIndex, totalSelections, occurrences[]]
-         */
-        // data: [sequenceIndex, occurrence]
-        d => d[3].map(x => [d[0], x]),
-        // key: occurrence
-        d => d[1]);
+      /**
+       * @param {[number, number, number, number[]]} d
+       * [seqIndex, selectionIndex, totalSelections, occurrences[]]
+       */
+      // data: [sequenceIndex, occurrence]
+      d => d[3].map(x => [d[0], x]),
+      // key: occurrence
+      d => d[1]);
     rects.exit().remove();
     let enteredRects =
-        rects.enter()
-            .append('rect')
-            .style('fill', d => `hsla(${Util.generateColor(d[0])}, 0.3333)`)
-            .attr('x', '50%')
-            .attr('y', '50%')
-            .attr('width', '0%')
-            .attr('height', '0%');
+      rects.enter()
+        .append('rect')
+        .style('fill', d => `hsla(${Util.generateColor(d[0])}, 0.3333)`)
+        .attr('x', '50%')
+        .attr('y', '50%')
+        .attr('width', '0%')
+        .attr('height', '0%');
     enteredRects
-        .filter(d => d[0] == index)  // new selections
-        .transition()
-        .delay(
-            d => Functions.TOTAL_TRANSITION_DURATION * d[1] /
-                (sequences.get(d[0]).length || 1))
-        .ease(d3.easeElasticOut)
-        .duration(Functions.TRANSITION_DURATION * 2)
-        .attr('x', '0%')
-        .attr('y', '0%')
-        .attr('width', '100%')
-        .attr('height', '100%');
+      .filter(d => d[0] == index)  // new selections
+      .transition()
+      .delay(d => Functions.TOTAL_TRANSITION_DURATION * d[1] /
+          (sequences.get(d[0]).length || 1))
+      .ease(d3.easeElasticOut)
+      .duration(Functions.TRANSITION_DURATION * 2)
+      .attr('x', '0%')
+      .attr('y', '0%')
+      .attr('width', '100%')
+      .attr('height', '100%');
     enteredRects.filter(d => d[0] != index)
-        .transition()
-        .ease(d3.easeSinOut)
-        .duration(Functions.TRANSITION_DURATION)
-        .attr('x', '0%')
-        .attr('y', '0%')
-        .attr('width', '100%')
-        .attr('height', '100%');
+      .transition()
+      .ease(d3.easeSinOut)
+      .duration(Functions.TRANSITION_DURATION)
+      .attr('x', '0%')
+      .attr('y', '0%')
+      .attr('width', '100%')
+      .attr('height', '100%');
 
     //#endregion
   }
@@ -516,14 +545,14 @@ class Functions {
     if (wrapper.empty()) {
       base = Functions.GRID_DEFAULT_BASE;
       wrapper = elem.append('g')
-                    .attr('class', 'plot-data-elem')
-                    .attr('id', 'plot-data-wrapper-0')
-                    // create metadata:
-                    // [base, sequences, sequenceData, cells]
-                    .datum([base, new Map(), new Map(), new Map()]);
+                  .attr('class', 'plot-data-elem')
+                  .attr('id', 'plot-data-wrapper-0')
+                  // create metadata:
+                  // [base, sequences, sequenceData, cells]
+                  .datum([base, new Map(), new Map(), new Map()]);
 
       Functions.gridCells(
-          wrapper, base, new Array(base * Functions.GRID_NUM_COLS), null);
+        wrapper, base, new Array(base * Functions.GRID_NUM_COLS), null);
     } else {
       base = wrapper.datum()[0];
     }
@@ -533,22 +562,18 @@ class Functions {
           plotHeight = elem.property('clientHeight');
     let tf = `translate(${plotWidth / 2}, -20)`;
     elem.select('#plot-title-text')
-        .attr('transform', tf)
-        .text(title.split('{base}').join(base));
+      .attr('transform', tf)
+      .text(title.split('{base}').join(base));
 
     tf = `translate(-30, ${plotHeight / 2})`;
     elem.select('#plot-y-label-text')
-        .text(yLabel)
-        .attr('transform', tf + ' rotate(-90)');
-
-    // clear unneeded labels
-    elem.select('#plot-x-label-text').html('');
-    elem.select('#plot-x-axis').html('');
+      .text(yLabel)
+      .attr('transform', tf + ' rotate(-90)');
   }
 
   /**
    * @private Creates the cell elements and the backgrounds for the non-empty
-   *     cells.
+   *   cells.
    * @param {Selection} wrapper
    * @param {number} base
    * @param {*[]} data
@@ -557,7 +582,7 @@ class Functions {
   static gridCells(wrapper, base, data, sequenceData) {
     // create scales and calculate cell dimensions
     const xScale =
-        d3.scaleLinear().domain([0, Functions.GRID_NUM_COLS]).range([0, 100]);
+      d3.scaleLinear().domain([0, Functions.GRID_NUM_COLS]).range([0, 100]);
     const yScale = d3.scaleLinear().domain([0, base]).range([100, 0]);
 
     const margin = Functions.GRID_CELL_MARGIN_FACTOR,
@@ -570,56 +595,56 @@ class Functions {
     let cells = wrapper.selectAll('.plot-grid-cell').data(data);
     cells.exit().remove();
     cells = cells.enter()
-                .append('svg')
-                .attr('class', 'plot-grid-cell')
-                .attr('id', (_d, i) => 'plot-grid-cell-' + i)
-                .merge(cells);
+              .append('svg')
+              .attr('class', 'plot-grid-cell')
+              .attr('id', (_d, i) => 'plot-grid-cell-' + i)
+              .merge(cells);
 
     cells.attr('x', (_d, i) => xScale(Math.floor(i / base)) + cellXOffset + '%')
-        .attr('y', (_d, i) => yScale(i % base + 1) + cellYOffset + '%')
-        .attr('width', cellWidth + '%')
-        .attr('height', cellHeight + '%');
+      .attr('y', (_d, i) => yScale(i % base + 1) + cellYOffset + '%')
+      .attr('width', cellWidth + '%')
+      .attr('height', cellHeight + '%');
 
     // draw cells' "clickable areas" (which ignore the margin)
     const invMargin = margin / (1 - 2 * margin);
     cells.selectAll('.plot-grid-cell-clickable')
-        .data([true])
-        .join('rect')
-        .attr('class', 'plot-grid-cell-clickable')
-        .style('opacity', 0)
-        .attr('x', -invMargin * 100 + '%')
-        .attr('y', -invMargin * 100 + '%')
-        .attr('width', 100 + 200 * invMargin + '%')
-        .attr('height', 100 + 200 * invMargin + '%');
+      .data([true])
+      .join('rect')
+      .attr('class', 'plot-grid-cell-clickable')
+      .style('opacity', 0)
+      .attr('x', -invMargin * 100 + '%')
+      .attr('y', -invMargin * 100 + '%')
+      .attr('width', 100 + 200 * invMargin + '%')
+      .attr('height', 100 + 200 * invMargin + '%');
 
     // draw cell backgrounds
     let backgrounds = cells.selectAll('.plot-grid-cell-background.active')
-                          .data(d => d === null ? [] : [true]);
+                        .data(d => d === null ? [] : [true]);
     // d: null=hidden, undefined=shown without contents
     backgrounds.exit()
-        .classed('active', false)
-        .transition()
-        .ease(d3.easeSinIn)
-        .duration(Functions.TRANSITION_DURATION)
-        .attr('x', '50%')
-        .attr('y', '50%')
-        .attr('width', '0%')
-        .attr('height', '0%')
-        .remove();
+      .classed('active', false)
+      .transition()
+      .ease(d3.easeSinIn)
+      .duration(Functions.TRANSITION_DURATION)
+      .attr('x', '50%')
+      .attr('y', '50%')
+      .attr('width', '0%')
+      .attr('height', '0%')
+      .remove();
     backgrounds.enter()
-        .append('rect')
-        .attr('class', 'plot-grid-cell-background active')
-        .attr('x', '50%')
-        .attr('y', '50%')
-        .attr('width', '0%')
-        .attr('height', '0%')
-        .transition()
-        .ease(d3.easeSinOut)
-        .duration(Functions.TRANSITION_DURATION)
-        .attr('x', '0%')
-        .attr('y', '0%')
-        .attr('width', '100%')
-        .attr('height', '100%');
+      .append('rect')
+      .attr('class', 'plot-grid-cell-background active')
+      .attr('x', '50%')
+      .attr('y', '50%')
+      .attr('width', '0%')
+      .attr('height', '0%')
+      .transition()
+      .ease(d3.easeSinOut)
+      .duration(Functions.TRANSITION_DURATION)
+      .attr('x', '0%')
+      .attr('y', '0%')
+      .attr('width', '100%')
+      .attr('height', '100%');
 
     // draw ellipses
     const numDots = Functions.GRID_NUM_ELLIPSIS_DOTS,
@@ -633,36 +658,36 @@ class Functions {
       }
     }
     let ellipses = wrapper.selectAll('.plot-grid-ellipsis-dot.active')
-                       .data(ellipsisData, d => d);
+                     .data(ellipsisData, d => d);
     ellipses.exit()
-        .classed('active', false)
-        .transition()
-        .ease(d3.easeSinIn)
-        .duration(Functions.TRANSITION_DURATION)
-        .attr('r', '0%')
-        .remove();
+      .classed('active', false)
+      .transition()
+      .ease(d3.easeSinIn)
+      .duration(Functions.TRANSITION_DURATION)
+      .attr('r', '0%')
+      .remove();
     ellipses.enter()
-        .append('circle')
-        .attr('class', 'plot-grid-ellipsis-dot active')
-        .attr('cx', d => xScale(d * dotSpan / (numDots + 1)) + '%')
-        .attr('cy', '50%')
-        .attr('r', '0%')
-        .transition()
-        .ease(d3.easeSinOut)
-        .duration(Functions.TRANSITION_DURATION)
-        .attr('r', Functions.GRID_CELL_MARGIN_FACTOR * cellWidth * 4 + '%');
+      .append('circle')
+      .attr('class', 'plot-grid-ellipsis-dot active')
+      .attr('cx', d => xScale(d * dotSpan / (numDots + 1)) + '%')
+      .attr('cy', '50%')
+      .attr('r', '0%')
+      .transition()
+      .ease(d3.easeSinOut)
+      .duration(Functions.TRANSITION_DURATION)
+      .attr('r', Functions.GRID_CELL_MARGIN_FACTOR * cellWidth * 4 + '%');
 
     // create axis-ticks
     wrapper.selectAll('.plot-grid-tick.y')
-        .data(d3.range(base))
-        .join('text')
-        .style('fill', 'black')
-        .attr('class', 'plot-grid-tick y')
-        .attr('id', d => 'plot-grid-tick-y-' + d)
-        .attr('y', d => yScale(d + 0.5) + '%')
-        .attr('transform', 'translate(-12, 4)')
-        .text(d => d)
-        .style('display', d => base > 12 && d % 2 ? 'none' : '');
+      .data(d3.range(base))
+      .join('text')
+      .style('fill', 'black')
+      .attr('class', 'plot-grid-tick y')
+      .attr('id', d => 'plot-grid-tick-y-' + d)
+      .attr('y', d => yScale(d + 0.5) + '%')
+      .attr('transform', 'translate(-12, 4)')
+      .text(d => d)
+      .style('display', d => base > 12 && d % 2 ? 'none' : '');
 
     const numCols = Functions.GRID_NUM_COLS;
     let xTickData = [], prevColValue = -base;
@@ -679,19 +704,19 @@ class Functions {
       prevColValue = currColValue;
     }
     wrapper.selectAll('.plot-grid-tick.x')
-        .data(xTickData)
-        .join('text')
-        .style('fill', 'black')
-        .attr('class', 'plot-grid-tick x')
-        .attr('id', (_d, i) => 'plot-grid-tick-x-' + i)
-        .attr('x', (_d, i) => xScale(i + 0.5) + '%')
-        .attr('y', '100%')
-        .attr('transform', 'translate(0, 12)')
-        .text(d => d)
-        .style('display', 'none');
+      .data(xTickData)
+      .join('text')
+      .style('fill', 'black')
+      .attr('class', 'plot-grid-tick x')
+      .attr('id', (_d, i) => 'plot-grid-tick-x-' + i)
+      .attr('x', (_d, i) => xScale(i + 0.5) + '%')
+      .attr('y', '100%')
+      .attr('transform', 'translate(0, 12)')
+      .text(d => d)
+      .style('display', 'none');
 
     // create cells' mouse events
-    cells.on('mouseover', (e, d) => {
+    cells.on('mouseenter', (e, d) => {
       let target = d3.select(e.currentTarget);
       const i = target.attr('id').substr('plot-grid-cell-'.length);
 
@@ -708,24 +733,22 @@ class Functions {
       InfoPanel.header(d[0]);
       for (let [index, occurrences] of d[1]) {
         InfoPanel.text('Appeared ')
-            .text(
-                occurrences.length, `hsl(${Util.generateColor(index, 0.5)})`,
-                true)
-            .text(` time${occurrences.length > 1 ? 's' : ''} in sequence `)
-            .text(
-                sequenceData.get(index)['a_num'],
-                `hsl(${Util.generateColor(index, 0.5)})`, true)
-            .newline();
+          .text(
+            occurrences.length, `hsl(${Util.generateColor(index, 0.5)})`, true)
+          .text(` time${occurrences.length > 1 ? 's' : ''} in sequence `)
+          .text(sequenceData.get(index)['a_num'],
+            `hsl(${Util.generateColor(index, 0.5)})`, true)
+          .newline();
       }
       InfoPanel.show(target);
     });
-    cells.on('mouseout', (e, d) => {
+    cells.on('mouseleave', (e, d) => {
       let target = d3.select(e.currentTarget);
       const i = +target.attr('id').substr('plot-grid-cell-'.length);
 
       // hide the corresponding x-tick and y-tick
       wrapper.selectAll('.plot-grid-tick.y')
-          .style('display', d => base > 12 && d % 2 ? 'none' : '');
+        .style('display', d => base > 12 && d % 2 ? 'none' : '');
       if (d === null) return;
       const col = Math.floor(i / base);
       wrapper.select('#plot-grid-tick-x-' + col).style('display', 'none');
@@ -742,52 +765,88 @@ class Functions {
 
   static LINE_NODE_RADIUS = 6;
 
-  static line(elem, data, index, xExtent, yExtent, showInfo) {
+  static line(elem, data, index, xExtent, yExtent, showInfo, plotMenu) {
     /** @type {Map<number, Map<number, Plottable>>>} */
-    let metadata = elem.datum();
-    if (!metadata) elem.datum(metadata = new Map());
+    let [metadata, settings] = elem.datum();
+    const haveSettingsChanged = settings !=
+      (plotMenu.isSelectableSelected('plot-scatter-menu-linear')
+          ? 'linear'
+          : plotMenu.getSteppedSliderCurrStep('plot-scatter-menu-log-slider'));
+
+    if (haveSettingsChanged) {
+      if (plotMenu.isSelectableSelected('plot-scatter-menu-linear')) {
+        settings = 'linear';
+      } else {
+        settings =
+          plotMenu.getSteppedSliderCurrStep('plot-scatter-menu-log-slider');
+      }
+      elem.datum()[1] = settings;
+    }
 
     let wrapper = elem.select('#plot-data-wrapper-' + index);
 
     const plotWidth = elem.node().clientWidth,
           plotHeight = elem.node().clientHeight;
 
-    if (!data) {  // data is null: user deselected, remove elements
+    if (!data && !haveSettingsChanged) {
+      // data is null: user deselected, remove elements
       for (let xs of metadata.values()) xs.delete(index);
 
       wrapper.classed('active', false)
-          .style('opacity', 1)
-          .transition('fade')
-          .ease(d3.easeSinIn)
-          .duration(Functions.TRANSITION_DURATION)
-          .style('opacity', 0)
-          .remove();
+        .style('opacity', 1)
+        .transition('fade')
+        .ease(d3.easeSinIn)
+        .duration(Functions.TRANSITION_DURATION)
+        .style('opacity', 0)
+        .remove();
 
       return;
     }
 
-    const xScale = d3.scaleLinear().domain(xExtent).range([0, plotWidth]),
-          yScale = d3.scaleLinear().domain(yExtent).range([plotHeight, 0]);
+    const xScale = d3.scaleLinear().domain(xExtent).range([0, plotWidth]);
+    let yScale;
+    if (settings == 'linear') {
+      yScale = d3.scaleLinear().domain(yExtent).range([plotHeight, 0]);
+    } else {
+      yScale = d3.scaleLog()
+                 .base(Functions.SCATTER_LOG_BASES[settings][0])
+                 .domain([Math.max(yExtent[0], Number.EPSILON), yExtent[1]])
+                 .range([plotHeight, 0]);
+    }
 
     const line = d3.line()
-                     .x((_d, i) => xScale(data.x[i]))
-                     .y((_d, i) => yScale(data.y[i]))
-                     .curve(d3.curveLinear);
+                   .x(d => xScale(d[0]))
+                   .y(d => (yScale(d[1]) + 1 || plotHeight + 1) - 1)
+                   .curve(d3.curveLinear);
+
+    if (haveSettingsChanged) {
+      // just updating the axis-scales
+      elem.selectAll('.plot-line-path')
+        .transition('move')
+        .ease(d3.easeSinOut)
+        .duration(Functions.TRANSITION_DURATION)
+        .attr('d', line);
+      elem.selectAll('.plot-line-node')
+        .attr('cx', d => xScale(d[0]))
+        .attr('cy', d => (yScale(d[1]) + 1 || plotHeight + 1) - 1);
+
+      return;
+    }
 
     if (!wrapper.empty() && wrapper.classed('active')) {
       // extent has been changed: move the elements
-      wrapper.selectAll('path')
-          .transition('move')
-          .ease(d3.easeSinOut)
-          .duration(Functions.TRANSITION_DURATION)
-          .attr('d', line);
+      wrapper.selectAll('.plot-line-path')
+        .transition('move')
+        .ease(d3.easeSinOut)
+        .duration(Functions.TRANSITION_DURATION)
+        .attr('d', line);
       wrapper.selectAll('.plot-line-bar-clickable')
-          .attr('x', d => xScale(d - 0.5))
-          .attr('width', xScale(1) - xScale(0))
-          .attr('height', plotHeight);
+        .attr('x', d => xScale(d - 0.5))
+        .attr('width', xScale(1) - xScale(0))
+        .attr('height', plotHeight);
       wrapper.selectAll('.plot-line-node')
-          .attr('cx', d => xScale(d))
-          .attr('cy', (_d, i) => yScale(data.y[i]));
+        .attr('cx', d => xScale(d[0]))
+        .attr('cy', d => (yScale(d[1]) + 1 || plotHeight + 1) - 1);
 
       return;
     }
@@ -802,36 +861,39 @@ class Functions {
     const strokeColor = `hsla(${Util.generateColor(index)}, 0.6667)`;
 
     wrapper = elem.append('g')
-                  .attr('class', 'plot-data-elem active')
-                  .attr('id', 'plot-data-wrapper-' + index);
+                .attr('class', 'plot-data-elem active')
+                .attr('id', 'plot-data-wrapper-' + index);
 
-    let path = wrapper.selectAll('path')
-                   .data([data])
-                   .join('path')
-                   .attr('d', line)
-                   .style('fill', 'none')
-                   .style('stroke', strokeColor)
-                   .style('stroke-width', '2px')
-                   .style('z-order', '1728');
+    const unrolledData = data.x.map((x, i) => [x, data.y[i]]);
+    let path = wrapper.append('path')
+                 .datum(unrolledData)
+                 .attr('class', 'plot-line-path')
+                 .attr('vector-effect', 'non-scaling-stroke')
+                 .attr('d', line)
+                 .style('fill', 'none')
+                 .style('stroke', strokeColor)
+                 .style('stroke-width', '2px')
+                 .style('z-order', '1728');
     const totalLength = path.node().getTotalLength();
     path.attr('stroke-dasharray', totalLength + ' ' + totalLength)
-        .attr('stroke-dashoffset', totalLength)
-        .transition('fade')
-        .ease(d3.easeLinear)
-        .duration(Functions.TOTAL_TRANSITION_DURATION)
-        .attr('stroke-dashoffset', 0);
+      .attr('stroke-dashoffset', totalLength)
+      .transition('fade')
+      .ease(d3.easeLinear)
+      .duration(Functions.TOTAL_TRANSITION_DURATION)
+      .attr('stroke-dashoffset', 0);
 
     // assuming that the data is continuous i.e. d[i+1] = d[i]+1
     wrapper.selectAll('.plot-line-node')
-        .data(data.x)
-        .join('circle')
-        .attr('class', 'plot-line-node')
-        .attr('id', (_d, i) => 'plot-line-node-' + i)
-        .style('fill', strokeColor)
-        .attr('cx', d => xScale(d))
-        .attr('cy', (_d, i) => yScale(data.y[i]))
-        .attr('r', 0);
-    wrapper.selectAll('.plot-line-bar-clickable')
+      .data(unrolledData)
+      .join('circle')
+      .attr('class', 'plot-line-node')
+      .attr('id', (_d, i) => 'plot-line-node-' + i)
+      .style('fill', strokeColor)
+      .attr('cx', d => xScale(d[0]))
+      .attr('cy', d => (yScale(d[1]) + 1 || plotHeight + 1) - 1)
+      .attr('r', 0);
+    let clickables =
+      wrapper.selectAll('.plot-line-bar-clickable')
         .data(data.x)
         .join('rect')
         .attr('class', 'plot-line-bar-clickable')
@@ -841,31 +903,37 @@ class Functions {
         .attr('y', 0)
         .attr('width', xScale(1) - xScale(0))
         .attr('height', plotHeight)
-        .on('mouseover',
-            e => {
-              let target = d3.select(e.currentTarget);
-              const i =
-                  +target.attr('id').substr('plot-line-bar-clickable-'.length);
+        .style('display', 'none')
+        .on('mouseenter',
+          e => {
+            let target = d3.select(e.currentTarget);
+            const i =
+              +target.attr('id').substr('plot-line-bar-clickable-'.length);
 
-              let node = elem.selectAll('#plot-line-node-' + i);
-              node.attr('r', Functions.LINE_NODE_RADIUS);
-
-              let info =
-                  Array.from(metadata.get(data.x[i])).map(x => x.concat(i));
-              if (showInfo(info)) InfoPanel.show(node);
-            })
-        .on('mouseout', e => {
+            let node = elem.selectAll('#plot-line-node-' + i);
+            node.attr('r', Functions.LINE_NODE_RADIUS);
+            let info =
+              Array.from(metadata.get(data.x[i])).map(x => x.concat(i));
+            if (showInfo(info)) InfoPanel.show(node);
+          })
+        .on('mouseleave', e => {
           InfoPanel.hide();
 
           const i = +d3.select(e.currentTarget)
-                         .attr('id')
-                         .substr('plot-line-bar-clickable-'.length);
-          elem.selectAll('#plot-line-node-' + i)
-              .transition('fade')
-              .ease(d3.easeSinIn)
-              .duration(Functions.TRANSITION_DURATION / 3)
-              .attr('r', 0);
+                       .attr('id')
+                       .substr('plot-line-bar-clickable-'.length);
+          elem.selectAll('#plot-line-node-' + i).attr('r', 0);
         });
+
+    clickables.transition()
+      .delay(
+        (_d, i) => i * Functions.TOTAL_TRANSITION_DURATION / (data.length || 1))
+      .style('display', '');
+  }
+
+  static lineAxes(elem, title, xLabel, yLabel, xExtent, yExtent, plotMenu) {
+    Functions.scatterAxes(
+      elem, title, xLabel, yLabel, xExtent, yExtent, plotMenu, Functions.line);
   }
 
   //#endregion
@@ -878,46 +946,81 @@ class Functions {
    */
   static SCATTER_MAX_RADIUS = 12;
 
-  static scatter(elem, data, index, xExtent, yExtent, showInfo) {
-    /** @type {Map<number, Map<number, Map<number, Plottable>>} */
-    let metadata = elem.datum();
-    if (!metadata) elem.datum(metadata = new Map());
+  static SCATTER_LOG_BASES = [
+    [(Math.sqrt(5) + 1) / 2, 'phi'],
+    [2, '2'],
+    [Math.E, 'e'],
+    [10, '10'],
+  ];
+
+  static scatter(elem, data, index, xExtent, yExtent, showInfo, plotMenu) {
+    // metadata: the data of all points currently plotted;
+    // settings: 'linear' for linear scale, some base index for log scale
+    let [metadata, settings] = elem.datum();
+    const haveSettingsChanged = settings !=
+      (plotMenu.isSelectableSelected('plot-scatter-menu-linear')
+          ? 'linear'
+          : plotMenu.getSteppedSliderCurrStep('plot-scatter-menu-log-slider'));
+
+    if (haveSettingsChanged) {
+      if (plotMenu.isSelectableSelected('plot-scatter-menu-linear')) {
+        settings = 'linear';
+      } else {
+        settings =
+          plotMenu.getSteppedSliderCurrStep('plot-scatter-menu-log-slider');
+      }
+      elem.datum()[1] = settings;
+    }
 
     let wrapper = elem.select('#plot-data-wrapper-' + index);
 
-    if (!data) {  // data is null: user deselected, remove elements
+    if (!data && !haveSettingsChanged) {
+      // user deselected, remove elements
       for (let xs of metadata.values())
         for (let ys of xs.values()) ys.delete(index);
 
       wrapper.classed('active', false)
-          .selectAll('circle')
-          .transition('fade')
-          .ease(d3.easeSinIn)
-          .duration(Functions.TRANSITION_DURATION)
-          .attr('r', 0)
-          .on('end', () => wrapper.remove());
+        .selectAll('circle')
+        .transition('fade')
+        .ease(d3.easeSinIn)
+        .duration(Functions.TRANSITION_DURATION)
+        .attr('r', 0)
+        .on('end', () => wrapper.remove());
 
       return;
     }
 
-    const maxMagnitude = data.magnitudes ? Math.max(...data.magnitudes) : 4;
-    // if magnitudes not provided, default to every circle having radius 1/2
-    // of max radius.
+    const xScale = d3.scaleLinear().domain(xExtent).range([0, 100]);
+    let yScale;
+    if (settings == 'linear') {
+      yScale = d3.scaleLinear().domain(yExtent).range([100, 0]);
+    } else {
+      yScale = d3.scaleLog()
+                 .base(Functions.SCATTER_LOG_BASES[settings][0])
+                 .domain([Math.max(yExtent[0], 1), yExtent[1]])
+                 .range([100, 0]);
+    }
 
-    const xScale = d3.scaleLinear().domain(xExtent).range([0, 100]),
-          yScale = d3.scaleLinear().domain(yExtent).range([100, 0]),
-          rScale = d3.scaleSqrt().domain([0, maxMagnitude]).range([
-            0, Functions.SCATTER_MAX_RADIUS
-          ]);
+    if (haveSettingsChanged) {
+      // just updating the axis-scales
+      elem.selectAll('circle')
+        .transition('move')
+        .ease(d3.easeSinOut)
+        .duration(Functions.TRANSITION_DURATION)
+        .attr('cx', d => xScale(d[0]) + '%')
+        .attr('cy', d => (yScale(d[1]) + 1 || 1201) - 1 + '%');
+
+      return;
+    }
 
     if (!wrapper.empty() && wrapper.classed('active')) {
       // extent has been changed: move the elements
       wrapper.selectAll('circle')
-          .transition('move')
-          .ease(d3.easeSinOut)
-          .duration(Functions.TRANSITION_DURATION)
-          .attr('cx', (_d, i) => xScale(data.x[i]) + '%')
-          .attr('cy', (_d, i) => yScale(data.y[i]) + '%');
+        .transition('move')
+        .ease(d3.easeSinOut)
+        .duration(Functions.TRANSITION_DURATION)
+        .attr('cx', d => xScale(d[0]) + '%')
+        .attr('cy', d => (yScale(d[1]) + 1 || 1201) - 1 + '%');
 
       return;
     }
@@ -933,45 +1036,90 @@ class Functions {
 
     // draw the new ones
     const fillColor = `hsla(${Util.generateColor(index)}, 0.3333)`,
-          strokeColor = `hsla(${Util.generateColor(index)}, 0.6667)`;
+          strokeColor = `hsla(${Util.generateColor(index)}, 0.6667)`,
+          maxMagnitude = data.magnitudes ? Math.max(...data.magnitudes) : 4;
+    // if magnitudes not provided, default to every circle having radius
+    // 1/2 of max radius.
+    const rScale = d3.scaleSqrt().domain([0, maxMagnitude]).range([
+      0, Functions.SCATTER_MAX_RADIUS
+    ]);
 
     wrapper = elem.append('g')
-                  .attr('class', 'plot-data-elem plot-data-wrapper active')
-                  .attr('id', 'plot-data-wrapper-' + index)
-                  .datum(metadata);
+                .attr('class', 'plot-data-elem plot-data-wrapper active')
+                .attr('id', 'plot-data-wrapper-' + index)
+                .datum(metadata);
 
     wrapper.selectAll('circle')
-        .data(data['x'])
-        .join('circle')
-        .attr('id', (_d, i) => 'plot-scatter-dot-' + i)
-        .attr('cx', d => xScale(d) + '%')
-        .attr('cy', (_d, i) => yScale(data.y[i]) + '%')
-        .attr('r', 0)
-        .style('fill', fillColor)
-        .style('stroke', strokeColor)
-        .style('stroke-width', '1px')
-        .style('z-order', '1728')
-        .on('mouseover',
-            (e, d) => {
-              let target = d3.select(e.currentTarget);
-              const i = +target.attr('id').substr('plot-scatter-dot-'.length);
+      .data(data.x.map((x, i) => [x, data.y[i]]))
+      .join('circle')
+      .attr('id', (_d, i) => 'plot-scatter-dot-' + i)
+      .attr('cx', d => xScale(d[0]) + '%')
+      .attr('cy', d => (yScale(d[1]) + 1 || 1201) - 1 + '%')
+      .attr('r', 0)
+      .style('fill', fillColor)
+      .style('stroke', strokeColor)
+      .style('stroke-width', '1px')
+      .style('z-order', '1728')
+      .on('mouseenter',
+        e => {
+          let target = d3.select(e.currentTarget);
+          const i = +target.attr('id').substr('plot-scatter-dot-'.length);
 
-              let info =
-                  Array.from(metadata.get(data.x[i]).get(data.y[i]).entries())
-                      .map(x => x.concat(i));
-              if (showInfo(info)) InfoPanel.show(target);
-            })
-        .on('mouseout', () => InfoPanel.hide())
-        .transition('fade')
-        .ease(d3.easeElasticOut)
-        .delay(
-            (_d, i) =>
-                i * Functions.TOTAL_TRANSITION_DURATION / (data.length || 1))
-        .duration(Functions.TRANSITION_DURATION * 2)
-        .attr('r', (_d, i) => rScale(data.magnitudes ? data.magnitudes[i] : 1));
+          let info =
+            Array.from(metadata.get(data.x[i]).get(data.y[i]).entries())
+              .map(x => x.concat(i));
+          if (showInfo(info)) InfoPanel.show(target);
+        })
+      .on('mouseleave', () => InfoPanel.hide())
+      .transition('fade')
+      .ease(d3.easeElasticOut)
+      .delay(
+        (_d, i) => i * Functions.TOTAL_TRANSITION_DURATION / (data.length || 1))
+      .duration(Functions.TRANSITION_DURATION * 2)
+      .attr('r', (_d, i) => rScale(data.magnitudes ? data.magnitudes[i] : 1));
   }
 
-  static scatterAxes(elem, title, xLabel, yLabel, xExtent, yExtent) {
+  /** @param {PlotMenu} plotMenu */
+  static scatterAxes(elem, title, xLabel, yLabel, xExtent, yExtent, plotMenu,
+    plotData = Functions.scatter) {
+    // create menu if necessary
+    if (!plotMenu.hasData('plot-scatter-menu-divider')) {
+      const update = () => {
+        plotData(elem, null, -1, xExtent, yExtent, null, plotMenu);
+        Functions.scatterAxes(
+          elem, title, xLabel, yLabel, xExtent, yExtent, plotMenu);
+      }, selectLinear = () => {
+        plotMenu.deselectSelectable('plot-scatter-menu-log')
+          .selectSelectable('plot-scatter-menu-linear')
+          .hideClasses('plot-setting-log');
+        update();
+      }, selectLog = () => {
+        plotMenu.deselectSelectable('plot-scatter-menu-linear')
+          .selectSelectable('plot-scatter-menu-log')
+          .showClasses('plot-setting-log');
+        update();
+      }, changeLogBase = i => {
+        plotMenu.setLabel('plot-scatter-menu-log-label',
+          'Log Base: ' + Functions.SCATTER_LOG_BASES[i][1]);
+        update();
+      };
+
+      plotMenu.appendDivider('plot-scatter-menu-divider')
+        .appendSelectable('Linear Scale', 'plot-scatter-menu-linear',
+          (_d, b) => !b && selectLinear())
+        .appendSelectable('Logarithmic Scale', 'plot-scatter-menu-log',
+          (_d, b) => !b && selectLog())
+        .appendLabel(
+          'Log Base: 10', 'plot-scatter-menu-log-label', 'plot-setting-log')
+        .appendSteppedSlider([0, 25, 50, 100], 3,
+          'plot-scatter-menu-log-slider', (_d, i) => changeLogBase(i),
+          'plot-setting-log');
+
+      // create metadata
+      elem.datum([new Map(), 'linear']);
+      selectLinear();
+    }
+
     // this function is called any time whenever there is a need to redraw the
     // axes
     const plotWidth = elem.property('clientWidth'),
@@ -979,39 +1127,58 @@ class Functions {
 
     // create scale for axis
     const xAxisScale = d3.scaleLinear().domain(xExtent).range([0, plotWidth]),
-          yAxisScale = d3.scaleLinear().domain(yExtent).range([plotHeight, 0]),
           xAxis = d3.axisBottom().scale(xAxisScale).ticks(5),
-          yAxis = d3.axisLeft().scale(yAxisScale).ticks(5);
-
+          isLinear = plotMenu.isSelectableSelected('plot-scatter-menu-linear');
+    let yAxisScale;
+    if (isLinear) {
+      yAxisScale = d3.scaleLinear().domain(yExtent).range([plotHeight, 0]);
+    } else {
+      yAxisScale =
+        d3.scaleLog()
+          .base(Functions.SCATTER_LOG_BASES[plotMenu.getSteppedSliderCurrStep(
+            'plot-scatter-menu-log-slider')][0])
+          .domain([
+            Math.max(
+              yExtent[0], plotData == Functions.scatter ? 1 : Number.EPSILON),
+            yExtent[1]
+          ])
+          .range([plotHeight, 0]);
+    }
+    let yAxis = d3.axisLeft().scale(yAxisScale).ticks(5);
+    if (!isLinear)
+      yAxis = yAxis.ticks(3).tickFormat(x => d3.format('')(+x.toFixed(2)));
     // plot axes
     elem.select('#plot-x-axis')
-        .transition('move')
-        .ease(d3.easeSinOut)
-        .duration(Functions.TRANSITION_DURATION)
-        .call(xAxis);
+      .transition('move')
+      .ease(d3.easeSinOut)
+      .duration(Functions.TRANSITION_DURATION)
+      .call(xAxis);
     elem.select('#plot-y-axis')
-        .classed('text-only-axis', false)
-        .transition('move')
-        .ease(d3.easeSinOut)
-        .duration(Functions.TRANSITION_DURATION)
-        .call(yAxis);
+      .classed('text-only-axis', false)
+      .transition('move')
+      .ease(d3.easeSinOut)
+      .duration(Functions.TRANSITION_DURATION)
+      .call(yAxis);
 
     // show axis and title labels
     let tf = `translate(${plotWidth / 2}, ${plotHeight + 32})`;
     elem.select('#plot-x-label-text').attr('transform', tf).text(xLabel);
 
-    const tickWidth =
-        Math.max(...yExtent.map(x => d3.format(',.2r')(x).length)) * 6;
-    tf = `translate(${- 9 - tickWidth}, ${plotHeight / 2})`;
+    const tickWidth = 6 *
+      Math.max(...yExtent.map(
+        x => (isLinear ? d3.format(',.2r')(x) : d3.format(',.2r')(x))
+               .toString()
+               .length));
+
+    tf = `translate(${- 12 - tickWidth}, ${plotHeight / 2})`;
     let yLabelElem = elem.select('#plot-y-label-text');
     yLabelElem.text(yLabel);
     yLabelElem.transition('move')
-        .ease(d3.easeSinOut)
-        .duration(
-            yLabelElem.attr('transform').includes('translate')
-                ? Functions.TRANSITION_DURATION
-                : 0)  // no transition for initial display to avoid being nifty
-        .attr('transform', tf + ' rotate(-90)');
+      .ease(d3.easeSinOut)
+      .duration(yLabelElem.attr('transform').includes('translate')
+          ? Functions.TRANSITION_DURATION
+          : 0)  // no transition for initial display to avoid being nifty
+      .attr('transform', tf + ' rotate(-90)');
 
     tf = `translate(${plotWidth / 2}, -20)`;
     elem.select('#plot-title-text').attr('transform', tf).text(title);

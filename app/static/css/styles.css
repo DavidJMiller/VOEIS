@@ -97,6 +97,10 @@ svg {
   overflow: visible;
 }
 
+a {
+  user-select: none;
+}
+
 .container-fluid {
   padding: 0px;
   margin: 0px;
@@ -387,13 +391,18 @@ g[class^='col'] {
 
 /****** PLOT ******************************************************************/
 
-#main-plot-svg,
-#bottom-plot-svg,
-#secondary-plot-svg,
-#ternary-plot-svg,
-#text-plot-svg {
-  margin-left: 96px;
-  margin-top: 36px;
+.plot-container {
+  background-color: white;
+}
+
+#main-plot .plot-svg,
+#bottom-plot .plot-svg,
+#secondary-plot .plot-svg,
+#ternary-plot .plot-svg,
+#text-plot .plot-svg {
+  position: relative;
+  left: 96px;
+  top: 36px;
   width: calc(100% - 96px - 12px);
   height: calc(100% - 36px - 36px);
 }
@@ -427,4 +436,39 @@ g[class^='col'] {
 .plot-grid-tick {
   font-size: xx-small;
   text-anchor: middle;
+}
+
+/****** PLOT MENU *************************************************************/
+
+.plot-menu-button {
+  position: relative;
+  top: calc(0%);
+  right: calc(0%);
+  padding: 6px;
+}
+
+.plot-menu {
+  position: absolute;
+  top: 42px;
+  right: 12px;
+  background-color: #f4f4f4;
+  z-index: 1729;
+}
+
+.plot-menu-item-selectable {
+  cursor: pointer;
+}
+
+.plot-menu-item-selectable:active {
+  color: white !important;
+}
+
+.plot-menu-item-selectable.bg-primary {
+  color: white !important;
+}
+
+.plot-menu-item-stepped-slider {
+  position: relative;
+  left: 12px;
+  width: calc(100% - 24px);
 }
