@@ -29,7 +29,7 @@ def init():
     Initializes the database by reading in the database files and
     constructing dictionaries for fast lookups.
     """
-    with open(SEQUENCE_DB_PATH, "r") as sequence_db:
+    with open(SEQUENCE_DB_PATH, "r", encoding='UTF8') as sequence_db:
         print("  Loading sequences...")
         for i, line in enumerate(sequence_db, 1):
             if i == MAX_NUM_SEQUENCES: break
@@ -43,7 +43,7 @@ def init():
                 "terms": list(map(int, terms.split(" "))),
             }
     
-    with open(NUMBER_DB_PATH, "r") as number_db:
+    with open(NUMBER_DB_PATH, "r", encoding='UTF8') as number_db:
         print("  Loading numbers...")
         for i, line in enumerate(number_db, 1):
             if i == MAX_NUM_NUMBERS: break

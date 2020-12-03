@@ -96,7 +96,7 @@ curr_step += 1
 
 sequence_names = {}
 num_sequences = 0
-with open(NAME_FILE_PATH, "r") as name_file:
+with open(NAME_FILE_PATH, "r", encoding='UTF8') as name_file:
     for line in name_file:
         # Skip comments and blank lines.
         if not line or line[0] != "A": continue
@@ -115,8 +115,8 @@ print(
 curr_step += 1
 
 number_data = {}
-with open(SEQUENCE_FILE_PATH, "r") as sequence_file:
-    with open(SEQUENCE_DB_PATH, "w") as sequence_db:
+with open(SEQUENCE_FILE_PATH, "r", encoding='UTF8') as sequence_file:
+    with open(SEQUENCE_DB_PATH, "w", encoding='UTF8') as sequence_db:
         number_appeared_sequences = {}
         number_neighbors = {}
         i = 0
@@ -182,7 +182,7 @@ curr_step += 1
 import heapq
 
 number_data_len = len(number_data)
-with open(NUMBER_DB_PATH, "w") as number_db:
+with open(NUMBER_DB_PATH, "w", encoding='UTF8') as number_db:
     for i, (num, data) in enumerate(number_data.items(), 1):
         if i % 10_000 == 0: print(f"    At number {i:,} of {number_data_len:,}")
         

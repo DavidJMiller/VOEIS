@@ -3,7 +3,7 @@
  *
  * VOEIS
  * David Miller, Kevin Song, and Qianlang Chen
- * T 12/02/20
+ * W 12/03/20
  */
 class SearchBar {
   //#region STATIC MEMBERS /////////////////////////////////////////////////////
@@ -187,11 +187,11 @@ class SearchBar {
       .appendSelectable('OEIS Home Page', 'search-bar-menu-oeis',
         () => window.open('https://oeis.org'))
       .appendSelectable('OEIS Data Source', 'search-bar-menu-data',
-        () => window.open('http://oeis.org/wiki/Welcome#Compressed_Versions'))
+        () => window.open('https://oeis.org/wiki/Welcome#Compressed_Versions'))
       .appendDivider('search-bar-menu-divider-1')
       .appendLabel('About Our Project', 'search-bar-menu-label-1')
       .appendSelectable('Project Introductory Video', 'search-bar-menu-video',
-        () => window.open('https://www.google.com'))
+        () => window.open('https://www.youtube.com/watch?v=h8mhWaJFFLM'))
       .appendSelectable('Project GitHub', 'search-bar-menu-github',
         () => window.open('https://github.com/DavidJMiller/VOEIS'))
       .appendSelectable('Project Proposal', 'search-bar-menu-proposal',

@@ -663,7 +663,7 @@ class PlotOptions {
     'Neighbor Distance',
     Functions.connections,
     Functions.parallel,
-    Functions.scatterAxes,
+    Functions.parallelAxes,
     info => {
       InfoPanel.header(info[0][1].y[info[0][2]]);
       for (let [s, d, i] of info) {

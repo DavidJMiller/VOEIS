@@ -424,6 +424,7 @@ class Functions {
       .attr('id', 'plot-line-clip-path-' + clipPathId)
       .append('rect')
       .attr('width', '0%')
+      .attr('height', '100%')
       .transition()
       .ease(d3.easeSinOut)
       .duration(Functions.TOTAL_TRANSITION_DURATION)
@@ -879,19 +880,19 @@ class Functions {
       const j = Math.min(Math.round(i), data.length - 1), x = data.x[j],
             y = data.y[j],
             delay =
-              Functions.TOTAL_TRANSITION_DURATION / (data.length || 1) * x;
-      topRect.transition('move-' + x)
+              Functions.TOTAL_TRANSITION_DURATION / (data.length || 1) * j;
+      topRect.transition('move-' + j)
         .delay(delay)
         .ease(d3.easeCircleOut)
         .duration(Functions.TRANSITION_DURATION / 2)
         .attr('height', y * 100 + '%');
-      topText.transition('move-' + x)
+      topText.transition('move-' + j)
         .delay(delay)
         .ease(d3.easeCircleOut)
         .duration(Functions.TRANSITION_DURATION / 2)
         .attr('y', y * 50 + '%')
         .text(Math.floor(y * 100) + '%');
-      bottomText.transition('move-' + x)
+      bottomText.transition('move-' + j)
         .delay(delay)
         .ease(d3.easeCircleOut)
         .duration(Functions.TRANSITION_DURATION / 2)
@@ -1549,6 +1550,7 @@ class Functions {
   static parallel(elem, data, index, xExtent, yExtent, showInfo) {
     // metadata: the data of all points currently plotted;
     // settings: 'linear' for linear scale, some base index for log scale
+    console.log(elem.datum());
     let [metadata, settings] = elem.datum();
     // const haveSettingsChanged = settings !=
     //  (plotMenu.isSelectableSelected('plot-scatter-menu-linear')
@@ -1753,6 +1755,11 @@ class Functions {
     return;
   }
 
+  static parallelAxes(elem, title, xLabel, yLabel, xExtent, yExtent, plotMenu) {
+    Functions.scatterAxes(elem, title, xLabel, yLabel, xExtent, yExtent,
+      plotMenu, Functions.parallel);
+  }
+
   //#endregion
 
   //#region LINE ---------------------------------------------------------------
@@ -1874,6 +1881,7 @@ class Functions {
       .attr('id', 'plot-line-clip-path-' + clipPathId)
       .append('rect')
       .attr('width', '0%')
+      .attr('height', '100%')
       .transition()
       .ease(d3.easeLinear)
       .duration(Functions.TOTAL_TRANSITION_DURATION)
@@ -2084,11 +2092,12 @@ class Functions {
     const isSloanes = title == PlotOptions.SLOANES_GAP.plotTitle,
           isParallel = title == PlotOptions.CONNECTIONS.plotTitle;
     // create menu if necessary
-    if (!plotMenu.hasClasses('plot-setting')) {
+    if (!plotMenu.hasClasses('plot-setting') &&
+      (!isParallel || !elem.datum())) {
       // TODO: get rid of this dirty check
 
       const update = () => {
-        if (!isSloanes)
+        if (!isSloanes && !isParallel)
           plotData(elem, null, -1, xExtent, yExtent, null, plotMenu);
         Functions.scatterAxes(
           elem, title, xLabel, yLabel, xExtent, yExtent, plotMenu, plotData);
@@ -2120,12 +2129,17 @@ class Functions {
           'plot-setting-log');
 
       // create metadata
-      if (isSloanes) {
+      if (isSloanes || isParallel) {
         elem.datum([new Map(), 10]);
         plotMenu.removeId('plot-scatter-menu-divider')
           .removeId('plot-scatter-menu-linear')
           .removeId('plot-scatter-menu-log');
-        selectLog();
+        if (isParallel) {
+          plotMenu.clear();
+          selectLinear();
+        } else {
+          selectLog();
+        }
         plotData(elem, null, -1, xExtent, yExtent, null, plotMenu);
       } else {
         elem.datum([new Map(), 'linear']);
@@ -2143,8 +2157,11 @@ class Functions {
           xAxis = d3.axisBottom().scale(xAxisScale).ticks(5),
           isLinear = plotMenu.isSelectableSelected('plot-scatter-menu-linear');
     let yAxisScale;
-    if (isLinear) {
-      if (isParallel) yExtent = [yExtent[0] - 0.5, yExtent[1] + 0.5];
+    if (isLinear || isParallel) {
+      if (isParallel) {
+        if (!yExtent[0]) yExtent = [-6, 6];
+        yExtent = [yExtent[0] - 0.5, yExtent[1] + 0.5];
+      }
       yAxisScale = d3.scaleLinear().domain(yExtent).range([plotHeight, 0]);
     } else {
       yAxisScale =
@@ -2159,8 +2176,10 @@ class Functions {
           .range([plotHeight, 0]);
     }
     let yAxis = d3.axisLeft().scale(yAxisScale).ticks(5);
-    if (!isLinear)
+    if (!isLinear && !isParallel)
       yAxis = yAxis.ticks(4).tickFormat(x => d3.format(',')(+x.toFixed(2)));
+    else if (isParallel)
+      yAxis = yAxis.tickFormat(x => x == 0 ? '' : x.toString());
     // plot axes
     elem.select('#plot-x-axis')
       .transition('move')
