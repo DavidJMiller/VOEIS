@@ -4,11 +4,7 @@
 Visualization of the Online Encylodpedia of Integer Sequences (VOEIS) aims to visualize integer sequences for analaysis purposes. We use the [OEIS](https://oeis.org) database for our project.
 
 ## Online Version
-We currently host our project on a Google Cloud VM accessible via: 
-
-http://34.72.63.148
-
-The website will be moved over to a private server, so the URL above will change.
+The application is not currently hosted online (I accidentally ```git cleaned -df``` on the VM it was hosted and the nginx code was removed). 
 
 ## Local Version
 The local version requires you to host the database locally. Because of this, we recommend running this on a machine with at least 6GB of RAM.
