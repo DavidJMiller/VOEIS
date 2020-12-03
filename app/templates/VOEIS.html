@@ -41,9 +41,9 @@
           </g>
           <g id="search-bar-view-navigator" class="btn-group d-flex">
             <button id="search-bar-view-navigator-local-button"
-              class="btn w-100 btn-secondary">Local</button>
+              class="btn w-100 btn-outline-secondary">Local</button>
             <button id="search-bar-view-navigator-global-button"
-              class="btn w-100 btn-outline-secondary">Global</button>
+              class="btn w-100 btn-secondary">Global</button>
             <button id="search-bar-view-navigator-fixed-button"
               class="btn w-100 btn-outline-secondary">Fixed</button>
           </g>
@@ -90,21 +90,22 @@
         </div>
       </div>
       <div id="view-wrapper" class="col-9">
-        <div class="row h-75" id="view-top">
+        <div id="view-top" class="row h-75">
           <div id="main-plot" class="col-8 plot-container"></div>
           <div id="right-view-wrapper" class="col-4">
-            <div class="row h-33">
+            <div id="right-view-top" class="row h-33 right-view">
               <div id="text-plot" class="col-12 plot-container"></div>
             </div>
-            <div class="row h-33">
+            <div id="right-view-middle" class="row h-33 right-view">
               <div id="secondary-plot" class="col-12 plot-container"></div>
             </div>
-            <div class="row h-33">
+            <div id="right-view-cover" class="row h-50 right-view-cover"></div>
+            <div id="right-view-bottom" class="row h-33 right-view">
               <div id="ternary-plot" class="col-12 plot-container"></div>
             </div>
           </div>
         </div>
-        <div class="row h-25">
+        <div id="view-bottom" class="row h-25">
           <div id="bottom-plot" class="col-12 plot-container"></div>
         </div>
       </div>

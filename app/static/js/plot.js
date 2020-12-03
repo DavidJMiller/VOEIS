@@ -137,6 +137,8 @@ class Plot {
         options[i].menuTitle,
         options[i],
         () => {
+          if (options[i] == this.currOption) return;  // didn't change
+
           this.plotMenu.deselectSelectable(this.currOption)
             .removeClasses('plot-setting');
           this.onOptionChange(i);

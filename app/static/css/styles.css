@@ -63,6 +63,7 @@
   --red-a-42: rgba(220, 53, 69, 0.4167);
   --back-button-height: 0px;
   --preset-list-height: 144px;
+  --ternary-plot-left: 96px;
 }
 
 * {
@@ -124,6 +125,10 @@ g[class^='col'] {
   height: calc(33.33%);
 }
 
+.h-67 {
+  height: calc(66.67%);
+}
+
 .custom-scrollbar {
   transition: scrollbar-color 0.1736s;
   scrollbar-color: transparent transparent;
@@ -153,6 +158,7 @@ g[class^='col'] {
   transition: opacity 0.1736s;
   opacity: 0.3333;
   cursor: pointer;
+  user-select: none;
 }
 
 .mini-button:hover {
@@ -165,8 +171,8 @@ g[class^='col'] {
 
 .text-only-axis path,
 .text-only-axis line {
-  fill: none;
-  stroke: none;
+  fill: none !important;
+  stroke: none !important;
 }
 
 #main-wrapper {
@@ -190,7 +196,7 @@ g[class^='col'] {
   padding-bottom: 4px !important;
   pointer-events: none;
   opacity: 0;
-  z-index: 1728;
+  z-index: 20736;
   float: left;
   font-size: small;
 }
@@ -398,13 +404,25 @@ g[class^='col'] {
 #main-plot .plot-svg,
 #bottom-plot .plot-svg,
 #secondary-plot .plot-svg,
-#ternary-plot .plot-svg,
 #text-plot .plot-svg {
   position: relative;
   left: 96px;
   top: 36px;
   width: calc(100% - 96px - 12px);
   height: calc(100% - 36px - 36px);
+}
+
+#ternary-plot .plot-svg {
+  position: relative;
+  left: var(--ternary-plot-left);
+  top: 36px;
+  width: calc(100% - var(--ternary-plot-left) - 12px);
+  height: calc(100% - 36px - 36px);
+}
+
+#bottom-plot .plot-menu {
+  max-height: calc(100% - 42px);
+  overflow-y: auto;
 }
 
 .x-axis-label {
@@ -442,24 +460,35 @@ g[class^='col'] {
 
 .plot-menu-button {
   position: relative;
-  top: calc(0%);
-  right: calc(0%);
+  top: -6px;
+  right: -6px;
   padding: 6px;
 }
 
 .plot-menu {
   position: absolute;
-  top: 42px;
+  top: 30px;
   right: 12px;
   background-color: #f4f4f4;
-  z-index: 1729;
+  z-index: 1728;
+  padding: 8px 0px;
+}
+
+.plot-menu-item-divider {
+  border-top: 1px solid var(--gray-a-25);
 }
 
 .plot-menu-item-selectable {
   cursor: pointer;
+  transition: background-color 0.1736s;
+}
+
+.plot-menu-item-selectable:hover {
+  background-color: var(--gray-a-25);
 }
 
 .plot-menu-item-selectable:active {
+  background-color: var(--gray);
   color: white !important;
 }
 
@@ -471,4 +500,10 @@ g[class^='col'] {
   position: relative;
   left: 12px;
   width: calc(100% - 24px);
+}
+
+/****** STORY *****************************************************************/
+
+#right-view-cover {
+  font-size: large;
 }

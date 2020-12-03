@@ -7,7 +7,7 @@ correctly-formatted data. See build_voeis_db.py for more info.
 
 VOEIS
 Qianlang Chen
-H 11/26/20
+T 12/02/20
 """
 
 SEQUENCE_DB_PATH = "data/sequences.txt"
@@ -131,13 +131,16 @@ def search(query, cap=12):
     return res
 
 
-def more_of_sequence(a_num, cap=1_728):
+def more_of_sequence(a_num, cap=int(2e9)):
     """
     Downloads and returns more terms of a sequence from the online OEIS.
     """
     a_num = f"{a_num:06}" if isinstance(a_num, int) else a_num[1:]
     url = f"http://oeis.org/A{a_num}/b{a_num}.txt"
     buffer = BytesIO()
+    
+    if 'extended_terms' in sequence_data[int(a_num[1:])]:
+        return sequence_data[int(a_num[1:])]['extended_terms']
     
     curl = pycurl.Curl()
     curl.setopt(curl.URL, url)
@@ -170,12 +173,15 @@ def more_of_sequence(a_num, cap=1_728):
     
     for i in range(comment_len, res_len):
         if i - comment_len == cap - 1: break
-        term = int(res[i].split(" ")[1])
-        if term < -(1 << 31) or term >= (1 << 31): break
+        line = res[i].split(" ")
+        if len(line) < 2: break
+        term = int(line[1])
+        if term < -(1 << 31) or term >= (1 << 31): continue
+        if term < SLOANES_GAP_MIN_NUM or term > SLOANES_GAP_MAX_NUM: continue
         
         terms.append(term)
     
-    sequence_data[int(a_num[1:])]['terms'] = terms
+    sequence_data[int(a_num[1:])]['extended_terms'] = terms
     
     return terms
 

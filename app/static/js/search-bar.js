@@ -3,7 +3,7 @@
  *
  * VOEIS
  * David Miller, Kevin Song, and Qianlang Chen
- * H 11/26/20
+ * T 12/02/20
  */
 class SearchBar {
   //#region STATIC MEMBERS /////////////////////////////////////////////////////
@@ -31,12 +31,12 @@ class SearchBar {
     'A050503',
     'A000045',
     'A000032',
-    'A000142',
     'A002182',
+    'A000142',
+    'A000079',
     'A000396',
     'A006370',
     'A007318',
-    'A000290',
   ];
 
   /** The A-numbers of the sequences in each sequence-preset. */
@@ -59,7 +59,7 @@ class SearchBar {
     this.view = view;
 
     /** @private @type {string} The current view. */
-    this.currView = 'local';
+    this.currView = 'global';
 
     /**
      * @private @type {Selection} A D3-selection containing the search-bar
@@ -202,6 +202,9 @@ class SearchBar {
         if (Object.keys(res).length) {
           this.defaultSequenceHistory.set(
             sequences[i], new SearchBarResultItem(res));
+
+          // load and cache the extended data also, on the server side
+          DBHandler.getMoreOfSequence(sequences[i], () => {});
         }
         if (!--remaining) onLoadingComplete();
       });
@@ -484,7 +487,7 @@ class SearchBar {
   }
 
   /** @private Selects or deselects a search result item. */
-  selectResItem(resItem) {
+  selectResItem(resItem, defaultIndex = 0) {
     let elem = resItem.elem, isSelected = this.selections.has(resItem),
         toView = null, tarIndex = -1;
     if (isSelected) {  // deselect
@@ -500,7 +503,8 @@ class SearchBar {
       let indexArray = this.currView == 'fixed' ? this.numberSelectionByIndex
                                                 : this.sequenceSelectionByIndex;
       toView = resItem.rawData;
-      tarIndex = indexArray.indexOf(null);  // assume always exists
+      tarIndex =
+        indexArray.indexOf(null, defaultIndex);  // assume always exists
 
       indexArray[tarIndex] = resItem;
       this.selections.set(resItem, tarIndex);
