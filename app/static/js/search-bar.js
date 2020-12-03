@@ -176,6 +176,43 @@ class SearchBar {
 
     this.loadDefaultHistoryItems();
     this.initEvents();
+    this.magicFunction();
+  }
+
+  magicFunction() {
+    const elem = this.elem.select('#search-bar-title-wrapper');
+
+    let menu = new PlotMenu(elem);
+    menu.appendLabel('Credits', 'search-bar-menu-label-0')
+      .appendSelectable('OEIS Home Page', 'search-bar-menu-oeis',
+        () => window.open('https://oeis.org'))
+      .appendSelectable('OEIS Data Source', 'search-bar-menu-data',
+        () => window.open('http://oeis.org/wiki/Welcome#Compressed_Versions'))
+      .appendDivider('search-bar-menu-divider-1')
+      .appendLabel('About Our Project', 'search-bar-menu-label-1')
+      .appendSelectable('Project Introductory Video', 'search-bar-menu-video',
+        () => window.open('https://www.google.com'))
+      .appendSelectable('Project GitHub', 'search-bar-menu-github',
+        () => window.open('https://github.com/DavidJMiller/VOEIS'))
+      .appendSelectable('Project Proposal', 'search-bar-menu-proposal',
+        () => window.open(
+          'https://github.com/DavidJMiller/VOEIS/raw/main/docs/proposal.pdf'))
+      .appendSelectable('Project Process Book', 'search-bar-menu-process',
+        () => window.open(
+          'https://github.com/DavidJMiller/VOEIS/raw/main/docs/process_book.pdf'));
+
+    elem
+      .on('mouseover',
+        () => {
+          if (menu.isMenuShowing) return;
+          InfoPanel.header('Click to learn more about our project :)')
+            .show(elem, 0, 1);
+        })
+      .on('mouseout', () => InfoPanel.hide())
+      .on('click', () => {
+        menu.show();
+        InfoPanel.hide();
+      });
   }
 
   /** @private Loads the default history items from the database. */

@@ -28,7 +28,6 @@ class PlotMenu {
     /** @private */
     this.isMenuButtonShowing = false;
 
-    /** @private */
     this.isMenuShowing = false;
 
     /** @private */
@@ -48,6 +47,8 @@ class PlotMenu {
     this.plotElem
       .on('mouseenter',
         () => {
+          if (d3.select('#search-bar').node().contains(this.plotElem.node()))
+            return;
           this.isMenuButtonShowing = true;
           if (this.itemIds.size) this.menuButton.style('display', '');
         })

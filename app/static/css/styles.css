@@ -221,6 +221,10 @@ g[class^='col'] {
   height: calc(100% - var(--back-button-height) - var(--preset-list-height));
 }
 
+#search-bar-title-wrapper .mini-button {
+  opacity: 0;
+}
+
 #search-bar-title {
   font-size: 72px;
   font-weight: bold;
@@ -228,6 +232,7 @@ g[class^='col'] {
   color: white;
   filter: drop-shadow(0px 0px 4px black);
   user-select: none;
+  cursor: pointer;
   margin: -12px 8px;
   overflow: hidden;
   word-wrap: break-word;
@@ -463,6 +468,7 @@ g[class^='col'] {
   top: -6px;
   right: -6px;
   padding: 6px;
+  font-size: x-large;
 }
 
 .plot-menu {
