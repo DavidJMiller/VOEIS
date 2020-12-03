@@ -637,6 +637,15 @@ class Functions {
     Functions.bar(elem, data, index, xExtent, balancedYExtent, showInfo)
   }
 
+  static derivativeBarAxes(
+    elem, title, xLabel, yLabel, xExtent, yExtent, _plotMenu) {
+    let yExtentAbsMax = Math.max(Math.abs(yExtent[0]), Math.abs(yExtent[1]));
+    let balancedYExtent = [-yExtentAbsMax, yExtentAbsMax];
+
+    Functions.barAxes(
+      elem, title, xLabel, yLabel, xExtent, balancedYExtent, _plotMenu);
+  }
+
   static barAxes(elem, title, xLabel, yLabel, xExtent, yExtent, _plotMenu) {
     // this function is called any time whenever there is a need to redraw the
     // axes
@@ -1550,7 +1559,6 @@ class Functions {
   static parallel(elem, data, index, xExtent, yExtent, showInfo) {
     // metadata: the data of all points currently plotted;
     // settings: 'linear' for linear scale, some base index for log scale
-    console.log(elem.datum());
     let [metadata, settings] = elem.datum();
     // const haveSettingsChanged = settings !=
     //  (plotMenu.isSelectableSelected('plot-scatter-menu-linear')

@@ -351,6 +351,7 @@ class View {
       .style('display', this.currView == 'global' ? '' : 'none')
       .style('opacity', 0);
     d3.select('#right-view-bottom')
+      .style('display', this.currView == 'fixed' ? 'none' : '')
       .classed('h-33', this.currView != 'global')
       .classed('h-50', this.currView == 'global');
     d3.select('#view-bottom')
@@ -537,7 +538,7 @@ class PlotOptions {
     'Change in Term Values',
     Functions.derivative,
     Functions.derivativeBar,
-    Functions.barAxes,
+    Functions.derivativeBarAxes,
     info => {
       for (let [s, d, i] of info) {
         const color = `hsl(${Util.generateColor(s, 0.5)})`;

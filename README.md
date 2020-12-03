@@ -3,6 +3,10 @@
 ## Overview
 Visualization of the Online Encylodpedia of Integer Sequences (VOEIS) aims to visualize integer sequences for analaysis purposes. We use the [OEIS](https://oeis.org) database for our project.
 
+If you want to learn more, check out [this](https://www.youtube.com/watch?v=h8mhWaJFFLM) video presentation.
+
+[![](https://img.youtube.com/vi/h8mhWaJFFLM/0.jpg)](https://youtu.be/h8mhWaJFFLM)
+
 ## Online Version
 The application is not currently hosted online (I accidentally ```git cleaned -df``` on the VM it was hosted and the nginx code was removed). 
 
