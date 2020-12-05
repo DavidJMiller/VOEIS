@@ -8,7 +8,7 @@ If you want to learn more, check out [this](https://www.youtube.com/watch?v=h8mh
 [![](https://img.youtube.com/vi/h8mhWaJFFLM/0.jpg)](https://youtu.be/h8mhWaJFFLM)
 
 ## Online Version
-The application is not currently hosted online (I accidentally ```git cleaned -df``` on the VM it was hosted and the nginx code was removed). 
+The application is not currently hosted online. We plan to host it online in the near future.
 
 ## Local Version
 The local version requires you to host the database locally. Because of this, we recommend running this on a machine with at least 6GB of RAM.
