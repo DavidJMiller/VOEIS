@@ -19,8 +19,9 @@ The VOEIS database consists of two plain-text files:
                 32-bit integers, separated by spaces. The values that don't fit
                 in 32 bits will be thrown away.
     
-    numbers.txt: Records the info for the numbers that has appeared across all
-        sequences in OEIS.
+    numbers-#.txt: Records the info for the numbers that has appeared across all
+        sequences in OEIS. Broken into two files: numbers-0.txt contains the
+        data for the first 373,248 integers, and numbers-1.txt contains rest.
         
         Format: each number will be described by one line (newlines
             are for decorations only):
@@ -66,20 +67,22 @@ the new ones.
 
 VOEIS
 Qianlang Chen
-H 11/05/20
+M 01/25/21
 """
 
 SEQUENCE_FILE_PATH = "data/raw/stripped"
 NAME_FILE_PATH = "data/raw/names"
 
 SEQUENCE_DB_PATH = "data/sequences.txt"
-NUMBER_DB_PATH = "data/numbers.txt"
+NUMBER_DB_0_PATH = "data/numbers-0.txt"
+NUMBER_DB_1_PATH = "data/numbers-1.txt"
+NUMBERS_IN_DB_0 = int(1.5 * 12**5)
 
 MAX_NEIGHBOR_OFFSET = 6
 MAX_NEIGHBORS_PER_OFFSET = 12
 
 NUM_STEPS = 3
-TEST_LIMIT = int(2e9)  # testing purposes: stop at this to speed up
+TEST_LIMIT = int(2e9) # testing purposes: stop at this to speed up
 
 # Ask to make sure so the user wouldn't accidentally override existing data.
 
@@ -108,15 +111,13 @@ with open(NAME_FILE_PATH, "r", encoding='UTF8') as name_file:
         a_num = int(line[1:7])
         sequence_names[a_num] = line[8:-1]
 
-print(
-    "Loading sequences, counting numbers, and writing sequence data... (step"
-    f" {curr_step} of {NUM_STEPS})"
-)
+print("Loading sequences, counting numbers, and writing sequence data... (step"
+      f" {curr_step} of {NUM_STEPS})")
 curr_step += 1
 
 number_data = {}
-with open(SEQUENCE_FILE_PATH, "r", encoding='UTF8') as sequence_file:
-    with open(SEQUENCE_DB_PATH, "w", encoding='UTF8') as sequence_db:
+with open(SEQUENCE_FILE_PATH, "r", encoding="UTF8") as sequence_file:
+    with open(SEQUENCE_DB_PATH, "w", encoding="UTF8") as sequence_db:
         number_appeared_sequences = {}
         number_neighbors = {}
         i = 0
@@ -133,20 +134,15 @@ with open(SEQUENCE_FILE_PATH, "r", encoding='UTF8') as sequence_file:
             # Load in the sequence.
             a_num = int(line[1:7])
             terms = list(
-                filter(
-                    lambda x: x >= -(1 << 31) and x < (1 << 31),
-                    map(int, line[9:-2].split(","))
-                )
-            )  # filter non 32-bits
-            if not terms: continue  # empty sequence (after filtering)
+                filter(lambda x: x >= -(1 << 31) and x < (1 << 31),
+                       map(int, line[9:-2].split(",")))) # filter non 32-bits
+            if not terms: continue # empty sequence (after filtering)
             
-            sequence_db.writelines(
-                [
-                    str(a_num) + "\t",
-                    sequence_names[a_num] + "\t",
-                    " ".join(map(str, terms)) + "\n",
-                ]
-            )
+            sequence_db.writelines([
+                str(a_num) + "\t",
+                sequence_names[a_num] + "\t",
+                " ".join(map(str, terms)) + "\n",
+            ])
             
             # Update the counts of numbers.
             sequence_len = len(terms)
@@ -159,11 +155,11 @@ with open(SEQUENCE_FILE_PATH, "r", encoding='UTF8') as sequence_file:
                         [{} for _ in range(2 * MAX_NEIGHBOR_OFFSET + 1)]
                     ]
                 
-                number_data[num][0] += 1  # total_count
-                number_data[num][1].add(a_num)  # appeared_sequences
+                number_data[num][0] += 1 # total_count
+                number_data[num][1].add(a_num) # appeared_sequences
                 if j not in number_data[num][2]:
                     number_data[num][2][j] = 0
-                number_data[num][2][j] += 1  # index_counts
+                number_data[num][2][j] += 1 # index_counts
                 for offset in range(2 * MAX_NEIGHBOR_OFFSET + 1):
                     if offset == MAX_NEIGHBOR_OFFSET: continue
                     tar_index = j - MAX_NEIGHBOR_OFFSET + offset
@@ -171,42 +167,41 @@ with open(SEQUENCE_FILE_PATH, "r", encoding='UTF8') as sequence_file:
                     target = terms[tar_index]
                     if target not in number_data[num][3][offset]:
                         number_data[num][3][offset][target] = 0
-                    number_data[num][3][offset][target] += 1  # neighbor
+                    number_data[num][3][offset][target] += 1 # neighbor
 
-print(
-    "Selecting most popular number neighbors and writing number data..."
-    f" (step {curr_step} of {NUM_STEPS})"
-)
+print("Selecting most popular number neighbors and writing number data..."
+      f" (step {curr_step} of {NUM_STEPS})")
 curr_step += 1
 
 import heapq
-
 number_data_len = len(number_data)
-with open(NUMBER_DB_PATH, "w", encoding='UTF8') as number_db:
-    for i, (num, data) in enumerate(number_data.items(), 1):
-        if i % 10_000 == 0: print(f"    At number {i:,} of {number_data_len:,}")
-        
-        lines = [
-            str(num) + " ",
-            str(data[0]) + " ",
-            str(len(data[1])) + "\t",
-            ",".join([f"{index} {count}"
-                      for index, count in data[2].items()]) + "\t",
-            ";".join(
-                [
-                    ",".join(
-                        [
-                            f"{neighbor} {count}"
-                            for neighbor, count in heapq.nlargest(
-                                MAX_NEIGHBORS_PER_OFFSET, data[3]
-                                [offset].items(), lambda x: x[1]
-                            )
-                        ]
-                    ) for offset in range(2 * MAX_NEIGHBOR_OFFSET + 1)
-                    if offset != MAX_NEIGHBOR_OFFSET
-                ]
-            ) + "\n",
-        ]
-        number_db.writelines(lines)
 
-print("Done!")
+def write_number_data(number_db, i, num, data):
+    if i % 10_000 == 0: print(f"    At number {i:,} of {number_data_len:,}")
+    lines = [
+        str(num) + " ",
+        str(data[0]) + " ",
+        str(len(data[1])) + "\t",
+        ",".join([f"{index} {count}" for index, count in data[2].items()]) +
+        "\t",
+        ";".join([
+            ",".join([
+                f"{neighbor} {count}" for neighbor, count in heapq.nlargest(
+                    MAX_NEIGHBORS_PER_OFFSET, data[3][offset].items(),
+                    lambda x: x[1])
+            ]) for offset in range(2 * MAX_NEIGHBOR_OFFSET +
+                                   1) if offset != MAX_NEIGHBOR_OFFSET
+        ]) + "\n",
+    ]
+    number_db.writelines(lines)
+
+number_data_iter = iter(number_data.items())
+with open(NUMBER_DB_0_PATH, "w", encoding="UTF8") as number_db_0:
+    for i, (num, data) in enumerate(number_data_iter, 1):
+        if i > NUMBERS_IN_DB_0: break
+        write_number_data(number_db_0, i, num, data)
+with open(NUMBER_DB_1_PATH, "w", encoding="UTF8") as number_db_1:
+    for i, (num, data) in enumerate(number_data_iter, i):
+        write_number_data(number_db_1, i, num, data)
+
+print("Done! Cleaning up...")
