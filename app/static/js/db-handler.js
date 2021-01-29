@@ -51,6 +51,11 @@ class DBHandler {
     /** @type {function(string)} */
     const process = d => {
       let tokens = d.split('%I A'), sequences = [], numLoaded = 0;
+      if (tokens.length == 1) {
+        // no result
+        callback(sequences);
+        return;
+      }
       for (let i = 1; i < tokens.length; i++) {
         let aNum = 'A' + tokens[i].slice(0, 6);
         DBHandler.getSequence(aNum, d => {
