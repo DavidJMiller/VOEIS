@@ -20,6 +20,7 @@
     "htmls",
     "jsonify",
     "nargs",
+    "nlargest",
     "num",
     "num freqs",
     "nums",
@@ -33,7 +34,8 @@
     "svgs",
     "test",
     "voeis",
-    "voeis data test"
+    "voeis data test",
+    "zfill"
   ],
   "python.pythonPath": "C:\\ProgramData\\Anaconda3\\python.exe"
 }

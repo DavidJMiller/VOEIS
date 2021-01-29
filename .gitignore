@@ -1,3 +1,6 @@
-**/__pycache__/**
+__pycache__
+data/raw
 
-.vscode
+debug.log
+
+tempCodeRunnerFile.py

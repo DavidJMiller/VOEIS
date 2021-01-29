@@ -7,11 +7,14 @@ correctly-formatted data. See build_voeis_db.py for more info.
 
 VOEIS
 Qianlang Chen
-T 12/02/20
+H 01/28/21
 """
 
-SEQUENCE_DB_PATH = "data/sequences.txt"
-NUMBER_DB_PATH = "data/numbers.txt"
+HOME = ""
+
+SEQUENCE_DB_PATH = f"{HOME}data/sequences.txt"
+NUMBER_DB_0_PATH = f"{HOME}data/numbers-0.txt"
+NUMBER_DB_1_PATH = f"{HOME}data/numbers-1.txt"
 
 MAX_NUM_SEQUENCES = 2**31 - 1
 MAX_NUM_NUMBERS = 2**31 - 1
@@ -23,14 +26,13 @@ SLOANES_GAP_MAX_NUM = 10_000
 sequence_data = {}
 number_data = {}
 
-
 def init():
     """
     Initializes the database by reading in the database files and
     constructing dictionaries for fast lookups.
     """
-    with open(SEQUENCE_DB_PATH, "r", encoding='UTF8') as sequence_db:
-        print("  Loading sequences...")
+    print("  Loading sequences...")
+    with open(SEQUENCE_DB_PATH, "r", encoding="UTF8") as sequence_db:
         for i, line in enumerate(sequence_db, 1):
             if i == MAX_NUM_SEQUENCES: break
             if i % 50_000 == 0: print(f"    At sequence {i:,}")
@@ -43,36 +45,26 @@ def init():
                 "terms": list(map(int, terms.split(" "))),
             }
     
-    with open(NUMBER_DB_PATH, "r", encoding='UTF8') as number_db:
-        print("  Loading numbers...")
-        for i, line in enumerate(number_db, 1):
+    def load_number_data(number_db, start_i):
+        i = start_i
+        for i, line in enumerate(number_db, start_i):
             if i == MAX_NUM_NUMBERS: break
             if i % 25_000 == 0: print(f"    At number {i:,}")
             if not line: continue
             basic_info, index_counts, neighbors = line[:-1].split("\t")
             num, total_count, total_num_sequences = basic_info.split()
             index_counts = {
-                index: count
-                for index, count in map(
+                index: count for index, count in map(
                     lambda token: map(int, token.split(" ")),
-                    index_counts.split(",")
-                )
+                    index_counts.split(","))
             }
-            neighbors = {
-                (offset if offset < 0 else offset + 1): (
-                    {
-                        neighbor: count
-                        for neighbor, count in map(
-                            lambda token: map(int, token.split(" ")),
-                            neighbors_w_offset.split(",")
-                            [:MAX_NEIGHBORS_PER_OFFSET]
-                        )
-                    } if neighbors_w_offset and offset <= MAX_NEIGHBOR_OFFSET
-                    else {}
-                )
-                for offset, neighbors_w_offset in
-                enumerate(neighbors.split(";"), -MAX_NEIGHBOR_OFFSET)
-            }
+            neighbors = {(offset if offset < 0 else offset + 1): ({
+                neighbor: count for neighbor, count in map(
+                    lambda token: map(int, token.split(" ")),
+                    neighbors_w_offset.split(",")[:MAX_NEIGHBORS_PER_OFFSET])
+            } if neighbors_w_offset and offset <= MAX_NEIGHBOR_OFFSET else {})
+                         for offset, neighbors_w_offset in enumerate(
+                             neighbors.split(";"), -MAX_NEIGHBOR_OFFSET)}
             
             number_data[int(num)] = {
                 "num": int(num),
@@ -81,7 +73,14 @@ def init():
                 "index_counts": index_counts,
                 "neighbors": neighbors
             }
-
+        
+        return i
+    
+    print("  Loading numbers...")
+    with open(NUMBER_DB_0_PATH, "r", encoding="UTF8") as number_db_0:
+        i = load_number_data(number_db_0, 1)
+    with open(NUMBER_DB_1_PATH, "r", encoding="UTF8") as number_db_1:
+        load_number_data(number_db_1, i)
 
 def get_sequence(a_num):
     """
@@ -93,7 +92,6 @@ def get_sequence(a_num):
     
     return sequence_data[a_num]
 
-
 def get_number(num):
     """
     Returns the data of a number.
@@ -102,10 +100,8 @@ def get_number(num):
     
     return number_data[num]
 
-
 import pycurl
 from io import BytesIO
-
 
 def search(query, cap=12):
     """
@@ -130,18 +126,16 @@ def search(query, cap=12):
     
     return res
 
-
 def more_of_sequence(a_num, cap=int(2e9)):
     """
     Downloads and returns more terms of a sequence from the online OEIS.
     """
     a_num = f"{a_num:06}" if isinstance(a_num, int) else a_num[1:]
-    url = f"http://oeis.org/A{a_num}/b{a_num}.txt"
-    buffer = BytesIO()
-    
     if 'extended_terms' in sequence_data[int(a_num[1:])]:
         return sequence_data[int(a_num[1:])]['extended_terms']
     
+    url = f"http://oeis.org/A{a_num}/b{a_num}.txt"
+    buffer = BytesIO()
     curl = pycurl.Curl()
     curl.setopt(curl.URL, url)
     curl.setopt(curl.WRITEDATA, buffer)
@@ -159,6 +153,7 @@ def more_of_sequence(a_num, cap=int(2e9)):
             return False
     
     terms = []
+    comment_len = 0
     for i in range(res_len):
         line = res[i].split(" ")
         if len(line) != 2 or not is_int(line[0]) or not is_int(line[1]):
@@ -184,7 +179,6 @@ def more_of_sequence(a_num, cap=int(2e9)):
     sequence_data[int(a_num[1:])]['extended_terms'] = terms
     
     return terms
-
 
 def get_sloanes():
     """
