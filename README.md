@@ -1,5 +1,7 @@
 # VOEIS
 
+***The application is currently hosted [here](https://voeis.pythonanywhere.com), running with limited function (no search function, not highlighting sequence terms in global view).***
+
 ## Overview
 Visualization of the Online Encylodpedia of Integer Sequences (VOEIS) aims to visualize integer sequences for analaysis purposes. We use the [OEIS](https://oeis.org) database for our project.
 
@@ -8,7 +10,10 @@ If you want to learn more, check out [this](https://www.youtube.com/watch?v=h8mh
 [![](https://img.youtube.com/vi/h8mhWaJFFLM/0.jpg)](https://youtu.be/h8mhWaJFFLM)
 
 ## Online Version
-The application is not currently hosted online. We plan to host it online in the near future.
+~~The application is not currently hosted online. We plan to host it online in the near future.~~
+[https://voeis.pythonanywhere.com/](https://voeis.pythonanywhere.com/)
+
+I'm searching for a place that'd host a Flask application for free *and* allow accessing other public websites (oeis.org), which would then unlock the full function.
 
 ## Local Version
 The local version requires you to host the database locally. Because of this, we recommend running this on a machine with at least 6GB of RAM.
@@ -42,4 +47,4 @@ The applicaiton will be available on http://0.0.0.0:5000 or [localhost:5000](loc
 
 ## Requirements
 
-The applicaiton requires [Flask](https://flask.palletsprojects.com/en/1.1.x/) and [PycURL](pycurl.io/docs/latest/index.html). The application also requires a working internet connection.
+The applicaiton requires [Flask](https://flask.palletsprojects.com/en/1.1.x/) and [PycURL](http://pycurl.io/). The application also requires a working internet connection.
