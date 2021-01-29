@@ -7,12 +7,14 @@ correctly-formatted data. See build_voeis_db.py for more info.
 
 VOEIS
 Qianlang Chen
-M 01/25/21
+H 01/28/21
 """
 
-SEQUENCE_DB_PATH = "data/sequences.txt"
-NUMBER_DB_0_PATH = "data/numbers-0.txt"
-NUMBER_DB_1_PATH = "data/numbers-1.txt"
+HOME = ""
+
+SEQUENCE_DB_PATH = f"{HOME}data/sequences.txt"
+NUMBER_DB_0_PATH = f"{HOME}data/numbers-0.txt"
+NUMBER_DB_1_PATH = f"{HOME}data/numbers-1.txt"
 
 MAX_NUM_SEQUENCES = 2**31 - 1
 MAX_NUM_NUMBERS = 2**31 - 1
@@ -129,12 +131,11 @@ def more_of_sequence(a_num, cap=int(2e9)):
     Downloads and returns more terms of a sequence from the online OEIS.
     """
     a_num = f"{a_num:06}" if isinstance(a_num, int) else a_num[1:]
-    url = f"http://oeis.org/A{a_num}/b{a_num}.txt"
-    buffer = BytesIO()
-    
     if 'extended_terms' in sequence_data[int(a_num[1:])]:
         return sequence_data[int(a_num[1:])]['extended_terms']
     
+    url = f"http://oeis.org/A{a_num}/b{a_num}.txt"
+    buffer = BytesIO()
     curl = pycurl.Curl()
     curl.setopt(curl.URL, url)
     curl.setopt(curl.WRITEDATA, buffer)

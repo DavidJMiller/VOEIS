@@ -241,7 +241,9 @@ class SearchBar {
             sequences[i], new SearchBarResultItem(res));
 
           // load and cache the extended data also, on the server side
-          DBHandler.getMoreOfSequence(sequences[i], () => {});
+          // TODO: disabled due to the free server not able to access OEIS
+          // SEE
+          // DBHandler.getMoreOfSequence(sequences[i], () => {});
         }
         if (!--remaining) onLoadingComplete();
       });
